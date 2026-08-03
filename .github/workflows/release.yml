@@ -26,6 +26,9 @@ jobs:
       - name: Build site
         run: bun run --cwd ./internal/site build
 
+      - name: Restore generated localization catalogs
+        run: git restore internal/site/src/locales
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
