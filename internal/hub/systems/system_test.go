@@ -8,6 +8,39 @@ import (
 	"github.com/henrygd/beszel/internal/entities/system"
 )
 
+func TestReconcileBootID(t *testing.T) {
+	ptr := func(value string) *string { return &value }
+	tests := []struct {
+		name     string
+		previous *string
+		current  *string
+		wantID   *string
+		rebooted bool
+	}{
+		{name: "changed", previous: ptr("boot-a"), current: ptr("boot-b"), wantID: ptr("boot-b"), rebooted: true},
+		{name: "same", previous: ptr("boot-a"), current: ptr("boot-a"), wantID: ptr("boot-a")},
+		{name: "first observation", current: ptr("boot-a"), wantID: ptr("boot-a")},
+		{name: "current read failed", previous: ptr("boot-a"), wantID: ptr("boot-a")},
+		{name: "unsupported", wantID: nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotID, rebooted := reconcileBootID(tt.previous, tt.current)
+			if tt.wantID == nil {
+				if gotID != nil {
+					t.Fatalf("reconcileBootID() ID = %q, want nil", *gotID)
+				}
+			} else if gotID == nil || *gotID != *tt.wantID {
+				t.Fatalf("reconcileBootID() ID = %v, want %q", gotID, *tt.wantID)
+			}
+			if rebooted != tt.rebooted {
+				t.Fatalf("reconcileBootID() rebooted = %v, want %v", rebooted, tt.rebooted)
+			}
+		})
+	}
+}
+
 func TestCombinedData_MigrateDeprecatedFields(t *testing.T) {
 	t.Run("Migrate NetworkSent and NetworkRecv to Bandwidth", func(t *testing.T) {
 		cd := &system.CombinedData{

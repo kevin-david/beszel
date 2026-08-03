@@ -45,6 +45,9 @@ func TestCollectionRulesDefault(t *testing.T) {
 	// alerts collection
 	alertsCollection, err := hub.FindCollectionByNameOrId("alerts")
 	require.NoError(t, err, "Failed to find alerts collection")
+	alertNameField, ok := alertsCollection.Fields.GetByName("name").(*core.SelectField)
+	require.True(t, ok, "alerts.name should be a select field")
+	assert.Contains(t, alertNameField.Values, "Reboot")
 	assert.Equal(t, isUserMatchesUser, *alertsCollection.ListRule)
 	assert.Nil(t, alertsCollection.ViewRule)
 	assert.Equal(t, isUserMatchesUser, *alertsCollection.CreateRule)

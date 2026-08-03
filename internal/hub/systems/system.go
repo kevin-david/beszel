@@ -138,7 +138,12 @@ func (sys *System) update() error {
 	migrateDeprecatedFields(data, !sys.detailsFetched.Load())
 
 	// create system records
-	_, err = sys.createRecords(data)
+	systemRecord, rebooted, err := sys.createRecords(data)
+	if err == nil && rebooted {
+		if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
+			sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+		}
+	}
 
 	// if details were included and fetched successfully, mark details as fetched and update smart interval if set by agent
 	if err == nil && data.Details != nil {
@@ -170,6 +175,13 @@ func (sys *System) update() error {
 	return err
 }
 
+func reconcileBootID(previous, current *string) (effective *string, rebooted bool) {
+	if current == nil {
+		return previous, false
+	}
+	return current, previous != nil && *previous != *current
+}
+
 func (sys *System) handlePaused() {
 	if sys.WsConn == nil {
 		// if the system is paused and there's no websocket connection, remove the system
@@ -184,13 +196,22 @@ func (sys *System) handlePaused() {
 }
 
 // createRecords updates the system record and adds system_stats and container_stats records
-func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error) {
-	systemRecord, err := sys.getRecord(sys.manager.hub)
-	if err != nil {
-		return nil, err
-	}
+func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool, error) {
 	hub := sys.manager.hub
-	err = hub.RunInTransaction(func(txApp core.App) error {
+	var systemRecord *core.Record
+	var rebooted bool
+	err := hub.RunInTransaction(func(txApp core.App) error {
+		var err error
+		systemRecord, err = sys.getRecord(txApp)
+		if err != nil {
+			return err
+		}
+		var previousInfo system.Info
+		_ = systemRecord.UnmarshalJSONField("info", &previousInfo)
+		effectiveBootID, changed := reconcileBootID(previousInfo.BootID, data.Info.BootID)
+		data.Info.BootID = effectiveBootID
+		rebooted = changed
+
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")
 		if err != nil {
@@ -247,7 +268,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 		return nil
 	})
 
-	return systemRecord, err
+	return systemRecord, rebooted, err
 }
 
 func createSystemDetailsRecord(app core.App, data *system.Details, systemId string) error {
