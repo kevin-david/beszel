@@ -45,6 +45,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image }}
+          flavor: latest=false
           tags: type=ref,event=tag
 
       - name: Log in to GitHub Container Registry
