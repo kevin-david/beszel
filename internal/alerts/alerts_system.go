@@ -14,7 +14,7 @@ import (
 )
 
 func (am *AlertManager) HandleSystemAlerts(systemRecord *core.Record, data *system.CombinedData) error {
-	alerts := am.alertsCache.GetAlertsExcludingNames(systemRecord.Id, "Status", "Reboot")
+	alerts := am.alertsCache.GetAlertsExcludingNames(systemRecord.Id, "Status", "Reboot", "Filesystem")
 	if len(alerts) == 0 {
 		return nil
 	}

@@ -52,6 +52,10 @@ export interface SystemInfo {
 	o?: string
 	/** uptime */
 	u: number
+	/** availability of explicitly configured extra filesystems */
+	efa?: Record<string, boolean>
+	/** confirmed unavailable filesystems persisted by the hub */
+	efm?: string[]
 	/** memory percent */
 	mp: number
 	/** disk percent */
@@ -339,6 +343,8 @@ export interface AlertInfo {
 	invert?: boolean
 	/** No threshold or duration sliders for point-in-time event alerts. */
 	noSliders?: boolean
+	/** Description shown while a state-based alert is active. */
+	activeDesc?: () => string
 }
 
 export type AlertMap = Record<string, Map<string, AlertRecord>>

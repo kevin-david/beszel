@@ -8,6 +8,8 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"net"
+	"slices"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -141,10 +143,15 @@ func (sys *System) update() error {
 	migrateDeprecatedFields(data, !sys.detailsFetched.Load())
 
 	// create system records
-	systemRecord, rebooted, err := sys.createRecords(data)
-	if err == nil && rebooted {
-		if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
-			sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+	systemRecord, transitions, err := sys.createRecords(data)
+	if err == nil {
+		if transitions.rebooted {
+			if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
+				sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+			}
+		}
+		if alertErr := sys.manager.hub.HandleFilesystemAlert(systemRecord, transitions.previousExtraFsMissing, data.Info.ExtraFsMissing, transitions.filesystemAvailabilitySupported); alertErr != nil {
+			sys.manager.hub.Logger().Error("Error handling filesystem alert", "system", sys.Id, "err", alertErr)
 		}
 	}
 
@@ -216,6 +223,30 @@ func rebootedFromUptime(previous, current uint64) bool {
 	return previous > current && previous-current > rebootUptimeTolerance
 }
 
+func reconcileFilesystemState(previous, current map[string]bool, previousMissing []string) []string {
+	if current == nil {
+		return slices.Clone(previousMissing)
+	}
+
+	missing := make([]string, 0, len(current))
+	if previous == nil {
+		for _, name := range previousMissing {
+			if available, exists := current[name]; exists && !available {
+				missing = append(missing, name)
+			}
+		}
+	} else {
+		for name, available := range current {
+			wasAvailable, observed := previous[name]
+			if !available && observed && !wasAvailable {
+				missing = append(missing, name)
+			}
+		}
+	}
+	sort.Strings(missing)
+	return missing
+}
+
 func (sys *System) handlePaused() {
 	if sys.WsConn == nil {
 		// if the system is paused and there's no websocket connection, remove the system
@@ -229,11 +260,17 @@ func (sys *System) handlePaused() {
 	}
 }
 
+type recordTransitions struct {
+	rebooted                        bool
+	filesystemAvailabilitySupported bool
+	previousExtraFsMissing          []string
+}
+
 // createRecords updates the system record and adds system_stats and container_stats records
-func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool, error) {
+func (sys *System) createRecords(data *system.CombinedData) (*core.Record, recordTransitions, error) {
 	hub := sys.manager.hub
 	var systemRecord *core.Record
-	var rebooted bool
+	var transitions recordTransitions
 	err := hub.RunInTransaction(func(txApp core.App) error {
 		var err error
 		systemRecord, err = sys.getRecord(txApp)
@@ -242,7 +279,14 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool,
 		}
 		var previousInfo system.Info
 		_ = systemRecord.UnmarshalJSONField("info", &previousInfo)
-		rebooted = rebootedFromUptime(previousInfo.Uptime, data.Info.Uptime)
+		transitions.rebooted = rebootedFromUptime(previousInfo.Uptime, data.Info.Uptime)
+		transitions.filesystemAvailabilitySupported = data.Info.ExtraFsAvailable != nil
+		transitions.previousExtraFsMissing = slices.Clone(previousInfo.ExtraFsMissing)
+		data.Info.ExtraFsMissing = reconcileFilesystemState(
+			previousInfo.ExtraFsAvailable,
+			data.Info.ExtraFsAvailable,
+			previousInfo.ExtraFsMissing,
+		)
 
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")
@@ -300,7 +344,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool,
 		return nil
 	})
 
-	return systemRecord, rebooted, err
+	return systemRecord, transitions, err
 }
 
 func createSystemDetailsRecord(app core.App, data *system.Details, systemId string) error {

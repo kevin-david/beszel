@@ -51,3 +51,33 @@ func TestSystemRecordsDetectRebootFromUptime(t *testing.T) {
 	assert.False(t, rebooted, "an unreadable uptime must not look like a restart")
 	assert.EqualValues(t, 0, stored.Uptime, "the hub must not write back a substitute reading")
 }
+
+func TestSystemRecordsPersistConfirmedMissingFilesystems(t *testing.T) {
+	hub, user := beszelTests.GetHubWithUser(t)
+	defer hub.Cleanup()
+
+	systemRecords, err := beszelTests.CreateSystems(hub, 1, user.Id, "up")
+	require.NoError(t, err)
+	monitoredSystem, err := hub.GetSystemManager().GetSystemFromStore(systemRecords[0].Id)
+	require.NoError(t, err)
+	monitoredSystem.StopUpdater()
+
+	writeAvailability := func(availability map[string]bool) system.Info {
+		record, err := monitoredSystem.CreateRecords(&system.CombinedData{Info: system.Info{ExtraFsAvailable: availability}})
+		require.NoError(t, err)
+		var stored system.Info
+		require.NoError(t, record.UnmarshalJSONField("info", &stored))
+		return stored
+	}
+
+	stored := writeAvailability(map[string]bool{"backup": true, "media": true})
+	assert.Empty(t, stored.ExtraFsMissing)
+	stored = writeAvailability(map[string]bool{"backup": false, "media": true})
+	assert.Empty(t, stored.ExtraFsMissing, "the first missing sample should remain pending")
+	stored = writeAvailability(map[string]bool{"backup": false, "media": true})
+	assert.Equal(t, []string{"backup"}, stored.ExtraFsMissing)
+	stored = writeAvailability(map[string]bool{"backup": false, "media": false})
+	assert.Equal(t, []string{"backup"}, stored.ExtraFsMissing, "media should remain pending for one sample")
+	stored = writeAvailability(map[string]bool{"backup": true, "media": false})
+	assert.Equal(t, []string{"media"}, stored.ExtraFsMissing)
+}
