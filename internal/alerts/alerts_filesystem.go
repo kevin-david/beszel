@@ -3,17 +3,16 @@ package alerts
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
 )
 
 // HandleFilesystemAlert sends alerts when explicitly configured filesystems
-// remain unavailable for two consecutive agent samples and when they recover.
-func (am *AlertManager) HandleFilesystemAlert(systemRecord *core.Record, previous, current map[string]bool) error {
-	// A nil map means the agent does not support filesystem availability data.
-	if current == nil {
+// remain unavailable for two consecutive agent samples, change, or recover.
+func (am *AlertManager) HandleFilesystemAlert(systemRecord *core.Record, previous, current []string, supported bool) error {
+	if !supported {
 		return nil
 	}
 
@@ -22,27 +21,18 @@ func (am *AlertManager) HandleFilesystemAlert(systemRecord *core.Record, previou
 		return nil
 	}
 
-	confirmedMissing := confirmedMissingFilesystems(previous, current)
-	allAvailable := true
-	for _, available := range current {
-		if !available {
-			allAvailable = false
-			break
-		}
-	}
-
 	var result error
 	for _, alert := range configuredAlerts {
 		switch {
-		case !alert.Triggered && len(confirmedMissing) > 0:
+		case !alert.Triggered && len(current) > 0:
 			if err := am.setAlertTriggered(alert, true); err != nil {
 				result = errors.Join(result, err)
 				continue
 			}
-			if err := am.sendFilesystemAlert(systemRecord, alert, confirmedMissing, false); err != nil {
+			if err := am.sendFilesystemAlert(systemRecord, alert, current, false); err != nil {
 				result = errors.Join(result, err)
 			}
-		case alert.Triggered && allAvailable:
+		case alert.Triggered && len(current) == 0:
 			if err := am.setAlertTriggered(alert, false); err != nil {
 				result = errors.Join(result, err)
 				continue
@@ -50,24 +40,13 @@ func (am *AlertManager) HandleFilesystemAlert(systemRecord *core.Record, previou
 			if err := am.sendFilesystemAlert(systemRecord, alert, nil, true); err != nil {
 				result = errors.Join(result, err)
 			}
+		case alert.Triggered && !slices.Equal(previous, current):
+			if err := am.sendFilesystemAlert(systemRecord, alert, current, false); err != nil {
+				result = errors.Join(result, err)
+			}
 		}
 	}
 	return result
-}
-
-func confirmedMissingFilesystems(previous, current map[string]bool) []string {
-	if previous == nil || current == nil {
-		return nil
-	}
-	missing := make([]string, 0)
-	for name, available := range current {
-		wasAvailable, observed := previous[name]
-		if !available && observed && !wasAvailable {
-			missing = append(missing, name)
-		}
-	}
-	sort.Strings(missing)
-	return missing
 }
 
 func (am *AlertManager) sendFilesystemAlert(systemRecord *core.Record, alert CachedAlertData, missing []string, recovered bool) error {

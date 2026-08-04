@@ -460,9 +460,10 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, "/srv/archive", stats.Mountpoint)
 		assert.Equal(t, "archive", stats.Name)
+		assert.False(t, stats.Expected, "legacy directory paths should retain usage monitoring without mount alerts")
 	})
 
-	t.Run("keeps an unavailable configured filesystem as expected", func(t *testing.T) {
+	t.Run("ignores invalid filesystem entry", func(t *testing.T) {
 		agent := &Agent{fsStats: make(map[string]*system.FsStats)}
 		discovery := diskDiscovery{
 			agent: agent,
@@ -473,12 +474,25 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 
 		discovery.addConfiguredExtraFsEntry("/missing/archive", "")
 
-		stats, exists := agent.fsStats["archive"]
-		assert.True(t, exists)
-		assert.True(t, stats.Expected)
-		assert.Equal(t, "/missing/archive", stats.Setting)
-		assert.False(t, stats.Available)
+		assert.Empty(t, agent.fsStats)
 	})
+}
+
+func TestPruneDuplicateRootExtraFilesystemsKeepsExpectedMount(t *testing.T) {
+	path := t.TempDir()
+	agent := &Agent{fsStats: map[string]*system.FsStats{
+		"root": {Root: true, Mountpoint: "/"},
+		"usb":  {Mountpoint: path, Expected: true},
+	}}
+
+	agent.pruneDuplicateRootExtraFilesystems()
+
+	assert.Contains(t, agent.fsStats, "usb")
+}
+
+func TestHasExpectedFilesystems(t *testing.T) {
+	assert.False(t, hasExpectedFilesystems(map[string]*system.FsStats{"archive": {}}))
+	assert.True(t, hasExpectedFilesystems(map[string]*system.FsStats{"usb": {Expected: true}}))
 }
 
 func TestRefreshExpectedFilesystemAvailability(t *testing.T) {

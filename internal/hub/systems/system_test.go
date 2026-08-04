@@ -3,6 +3,7 @@
 package systems
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/henrygd/beszel/internal/entities/system"
@@ -36,6 +37,31 @@ func TestReconcileBootID(t *testing.T) {
 			}
 			if rebooted != tt.rebooted {
 				t.Fatalf("reconcileBootID() rebooted = %v, want %v", rebooted, tt.rebooted)
+			}
+		})
+	}
+}
+
+func TestReconcileFilesystemState(t *testing.T) {
+	tests := []struct {
+		name            string
+		previous        map[string]bool
+		current         map[string]bool
+		previousMissing []string
+		wantMissing     []string
+	}{
+		{name: "old agent preserves active state", previousMissing: []string{"usb"}, wantMissing: []string{"usb"}},
+		{name: "first missing sample is pending", previous: map[string]bool{"usb": true}, current: map[string]bool{"usb": false}},
+		{name: "second missing sample confirms", previous: map[string]bool{"usb": false}, current: map[string]bool{"usb": false}, wantMissing: []string{"usb"}},
+		{name: "recovery clears missing", previous: map[string]bool{"usb": false}, current: map[string]bool{"usb": true}, previousMissing: []string{"usb"}},
+		{name: "overlapping failure replaces recovered mount", previous: map[string]bool{"backup": false, "media": false}, current: map[string]bool{"backup": true, "media": false}, previousMissing: []string{"backup"}, wantMissing: []string{"media"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := reconcileFilesystemState(tt.previous, tt.current, tt.previousMissing)
+			if !slices.Equal(got, tt.wantMissing) {
+				t.Fatalf("reconcileFilesystemState() = %v, want %v", got, tt.wantMissing)
 			}
 		})
 	}

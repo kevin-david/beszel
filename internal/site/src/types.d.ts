@@ -56,6 +56,8 @@ export interface SystemInfo {
 	bi?: string
 	/** availability of explicitly configured extra filesystems */
 	efa?: Record<string, boolean>
+	/** confirmed unavailable filesystems persisted by the hub */
+	efm?: string[]
 	/** memory percent */
 	mp: number
 	/** disk percent */

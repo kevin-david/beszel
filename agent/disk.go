@@ -241,8 +241,9 @@ func findPartitionByFilesystemSetting(filesystem string, partitions []disk.Parti
 	return disk.PartitionStat{}, false
 }
 
-// addConfiguredExtraFsEntry resolves one EXTRA_FILESYSTEMS entry, preferring a
-// discovered partition and retaining unavailable entries as expected mounts.
+// addConfiguredExtraFsEntry resolves one EXTRA_FILESYSTEMS entry. Entries that
+// match a mounted partition are monitored for availability; other usable paths
+// retain the legacy disk-usage-only behavior.
 func (d *diskDiscovery) addConfiguredExtraFsEntry(filesystem, customName string) {
 	if filesystem == "" {
 		return
@@ -256,15 +257,10 @@ func (d *diskDiscovery) addConfiguredExtraFsEntry(filesystem, customName string)
 		return
 	}
 
-	// Keep explicitly configured filesystems even when they are unavailable so
-	// the hub can report mounts that are absent when the agent starts.
-	if stats := d.addFsStat(filepath.Base(filesystem), filesystem, false, customName); stats != nil {
-		stats.Setting = filesystem
-		stats.Expected = true
-		stats.Available = false
-		if _, err := d.usageFn(filesystem); err != nil {
-			slog.Warn("Configured filesystem unavailable", "name", filesystem, "err", err)
-		}
+	if _, err := d.usageFn(filesystem); err == nil {
+		d.addFsStat(filepath.Base(filesystem), filesystem, false, customName)
+	} else {
+		slog.Error("Invalid filesystem", "name", filesystem, "err", err)
 	}
 }
 
@@ -403,7 +399,7 @@ func (a *Agent) pruneDuplicateRootExtraFilesystems() {
 		return
 	}
 	for name, stats := range a.fsStats {
-		if stats == nil || stats.Root {
+		if stats == nil || stats.Root || stats.Expected {
 			continue
 		}
 		extraUsage, err := disk.Usage(stats.Mountpoint)
@@ -571,16 +567,17 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		!a.lastDiskUsageUpdate.IsZero() &&
 		time.Since(a.lastDiskUsageUpdate) < a.diskUsageCacheDuration
 
-	if partitions, err := disk.PartitionsWithContext(context.Background(), true); err == nil {
-		refreshExpectedFilesystemAvailability(a.fsStats, partitions)
-	} else {
-		slog.Error("Error refreshing disk partitions", "err", err)
+	if hasExpectedFilesystems(a.fsStats) {
+		if partitions, err := disk.PartitionsWithContext(context.Background(), true); err == nil {
+			refreshExpectedFilesystemAvailability(a.fsStats, partitions)
+		} else {
+			slog.Error("Error refreshing disk partitions", "err", err)
+		}
 	}
 
 	// disk usage
 	for _, stats := range a.fsStats {
 		if stats.Expected && !stats.Available {
-			resetFilesystemStats(stats)
 			continue
 		}
 		// Skip non-root filesystems if caching is active
@@ -606,6 +603,15 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 	if !cacheExtraFs {
 		a.lastDiskUsageUpdate = time.Now()
 	}
+}
+
+func hasExpectedFilesystems(fsStats map[string]*system.FsStats) bool {
+	for _, stats := range fsStats {
+		if stats != nil && stats.Expected {
+			return true
+		}
+	}
+	return false
 }
 
 func resetFilesystemStats(stats *system.FsStats) {

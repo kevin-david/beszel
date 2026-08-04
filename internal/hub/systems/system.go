@@ -8,6 +8,8 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"net"
+	"slices"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -145,7 +147,7 @@ func (sys *System) update() error {
 				sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
 			}
 		}
-		if alertErr := sys.manager.hub.HandleFilesystemAlert(systemRecord, transitions.previousExtraFsAvailable, data.Info.ExtraFsAvailable); alertErr != nil {
+		if alertErr := sys.manager.hub.HandleFilesystemAlert(systemRecord, transitions.previousExtraFsMissing, data.Info.ExtraFsMissing, transitions.filesystemAvailabilitySupported); alertErr != nil {
 			sys.manager.hub.Logger().Error("Error handling filesystem alert", "system", sys.Id, "err", alertErr)
 		}
 	}
@@ -187,6 +189,30 @@ func reconcileBootID(previous, current *string) (effective *string, rebooted boo
 	return current, previous != nil && *previous != *current
 }
 
+func reconcileFilesystemState(previous, current map[string]bool, previousMissing []string) []string {
+	if current == nil {
+		return slices.Clone(previousMissing)
+	}
+
+	missing := make([]string, 0, len(current))
+	if previous == nil {
+		for _, name := range previousMissing {
+			if available, exists := current[name]; exists && !available {
+				missing = append(missing, name)
+			}
+		}
+	} else {
+		for name, available := range current {
+			wasAvailable, observed := previous[name]
+			if !available && observed && !wasAvailable {
+				missing = append(missing, name)
+			}
+		}
+	}
+	sort.Strings(missing)
+	return missing
+}
+
 func (sys *System) handlePaused() {
 	if sys.WsConn == nil {
 		// if the system is paused and there's no websocket connection, remove the system
@@ -201,8 +227,9 @@ func (sys *System) handlePaused() {
 }
 
 type recordTransitions struct {
-	rebooted                 bool
-	previousExtraFsAvailable map[string]bool
+	rebooted                        bool
+	filesystemAvailabilitySupported bool
+	previousExtraFsMissing          []string
 }
 
 // createRecords updates the system record and adds system_stats and container_stats records
@@ -221,7 +248,13 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, recor
 		effectiveBootID, changed := reconcileBootID(previousInfo.BootID, data.Info.BootID)
 		data.Info.BootID = effectiveBootID
 		transitions.rebooted = changed
-		transitions.previousExtraFsAvailable = previousInfo.ExtraFsAvailable
+		transitions.filesystemAvailabilitySupported = data.Info.ExtraFsAvailable != nil
+		transitions.previousExtraFsMissing = slices.Clone(previousInfo.ExtraFsMissing)
+		data.Info.ExtraFsMissing = reconcileFilesystemState(
+			previousInfo.ExtraFsAvailable,
+			data.Info.ExtraFsAvailable,
+			previousInfo.ExtraFsMissing,
+		)
 
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")

@@ -161,6 +161,8 @@ type Info struct {
 	BootID         *string            `json:"bi,omitempty" cbor:"24,keyasint,omitempty"` // Linux kernel boot identifier
 	// ExtraFsAvailable is non-nil on agents that support expected filesystem monitoring.
 	ExtraFsAvailable map[string]bool `json:"efa" cbor:"25,keyasint"`
+	// ExtraFsMissing is derived by the hub and persisted in the system info record.
+	ExtraFsMissing []string `json:"efm,omitempty" cbor:"-"`
 }
 
 // Data that does not change during process lifetime and is not needed in All Systems table
