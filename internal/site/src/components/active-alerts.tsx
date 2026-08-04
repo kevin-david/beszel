@@ -30,7 +30,6 @@ export const ActiveAlerts = () => {
 		return { activeAlerts, alertsKey }
 	}, [alerts])
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: alertsKey is inclusive
 	return useMemo(() => {
 		if (activeAlerts.length === 0) {
 			return null
@@ -59,7 +58,9 @@ export const ActiveAlerts = () => {
 											{systems[alert.system]?.name} {info.name()}
 										</AlertTitle>
 										<AlertDescription>
-											{alert.name === "Status" ? (
+											{info.activeDesc ? (
+												info.activeDesc()
+											) : alert.name === "Status" ? (
 												<Trans>Connection is down</Trans>
 											) : info.invert ? (
 												<Trans>

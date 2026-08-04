@@ -433,6 +433,9 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, "/mnt/backup", stats.Mountpoint)
 		assert.Equal(t, "backup", stats.Name)
+		assert.True(t, stats.Expected)
+		assert.Equal(t, "sdb1", stats.Setting)
+		assert.True(t, stats.Available)
 	})
 
 	t.Run("falls back to usage-validated path", func(t *testing.T) {
@@ -459,7 +462,7 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 		assert.Equal(t, "archive", stats.Name)
 	})
 
-	t.Run("ignores invalid filesystem entry", func(t *testing.T) {
+	t.Run("keeps an unavailable configured filesystem as expected", func(t *testing.T) {
 		agent := &Agent{fsStats: make(map[string]*system.FsStats)}
 		discovery := diskDiscovery{
 			agent: agent,
@@ -470,8 +473,35 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 
 		discovery.addConfiguredExtraFsEntry("/missing/archive", "")
 
-		assert.Empty(t, agent.fsStats)
+		stats, exists := agent.fsStats["archive"]
+		assert.True(t, exists)
+		assert.True(t, stats.Expected)
+		assert.Equal(t, "/missing/archive", stats.Setting)
+		assert.False(t, stats.Available)
 	})
+}
+
+func TestRefreshExpectedFilesystemAvailability(t *testing.T) {
+	stats := &system.FsStats{
+		Mountpoint: "/usb-hdd",
+		Setting:    "/usb-hdd",
+		Expected:   true,
+		Available:  true,
+		DiskTotal:  100,
+		DiskUsed:   90,
+	}
+
+	refreshExpectedFilesystemAvailability(map[string]*system.FsStats{"sdd": stats}, nil)
+	assert.False(t, stats.Available)
+	assert.Zero(t, stats.DiskTotal)
+	assert.Zero(t, stats.DiskUsed)
+
+	refreshExpectedFilesystemAvailability(map[string]*system.FsStats{"sdd": stats}, []disk.PartitionStat{{
+		Device:     "/dev/sdd",
+		Mountpoint: "/usb-hdd",
+	}})
+	assert.True(t, stats.Available)
+	assert.Equal(t, "/usb-hdd", stats.Mountpoint)
 }
 
 func TestAddConfiguredExtraFilesystems(t *testing.T) {

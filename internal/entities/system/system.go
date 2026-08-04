@@ -86,6 +86,9 @@ type FsStats struct {
 	Root           bool      `json:"-"`
 	Mountpoint     string    `json:"-"`
 	Name           string    `json:"-"`
+	Setting        string    `json:"-" cbor:"-"`
+	Expected       bool      `json:"-" cbor:"-"`
+	Available      bool      `json:"-" cbor:"-"`
 	DiskTotal      float64   `json:"d" cbor:"0,keyasint"`
 	DiskUsed       float64   `json:"du" cbor:"1,keyasint"`
 	TotalRead      uint64    `json:"-"`
@@ -156,6 +159,8 @@ type Info struct {
 	Services       []uint16           `json:"sv,omitempty" cbor:"22,keyasint,omitempty"` // [totalServices, numFailedServices]
 	Battery        [2]uint8           `json:"bat,omitzero" cbor:"23,keyasint,omitzero"`  // [percent, charge state]
 	BootID         *string            `json:"bi,omitempty" cbor:"24,keyasint,omitempty"` // Linux kernel boot identifier
+	// ExtraFsAvailable is non-nil on agents that support expected filesystem monitoring.
+	ExtraFsAvailable map[string]bool `json:"efa" cbor:"25,keyasint"`
 }
 
 // Data that does not change during process lifetime and is not needed in All Systems table

@@ -138,10 +138,15 @@ func (sys *System) update() error {
 	migrateDeprecatedFields(data, !sys.detailsFetched.Load())
 
 	// create system records
-	systemRecord, rebooted, err := sys.createRecords(data)
-	if err == nil && rebooted {
-		if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
-			sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+	systemRecord, transitions, err := sys.createRecords(data)
+	if err == nil {
+		if transitions.rebooted {
+			if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
+				sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+			}
+		}
+		if alertErr := sys.manager.hub.HandleFilesystemAlert(systemRecord, transitions.previousExtraFsAvailable, data.Info.ExtraFsAvailable); alertErr != nil {
+			sys.manager.hub.Logger().Error("Error handling filesystem alert", "system", sys.Id, "err", alertErr)
 		}
 	}
 
@@ -195,11 +200,16 @@ func (sys *System) handlePaused() {
 	}
 }
 
+type recordTransitions struct {
+	rebooted                 bool
+	previousExtraFsAvailable map[string]bool
+}
+
 // createRecords updates the system record and adds system_stats and container_stats records
-func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool, error) {
+func (sys *System) createRecords(data *system.CombinedData) (*core.Record, recordTransitions, error) {
 	hub := sys.manager.hub
 	var systemRecord *core.Record
-	var rebooted bool
+	var transitions recordTransitions
 	err := hub.RunInTransaction(func(txApp core.App) error {
 		var err error
 		systemRecord, err = sys.getRecord(txApp)
@@ -210,7 +220,8 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool,
 		_ = systemRecord.UnmarshalJSONField("info", &previousInfo)
 		effectiveBootID, changed := reconcileBootID(previousInfo.BootID, data.Info.BootID)
 		data.Info.BootID = effectiveBootID
-		rebooted = changed
+		transitions.rebooted = changed
+		transitions.previousExtraFsAvailable = previousInfo.ExtraFsAvailable
 
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")
@@ -268,7 +279,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool,
 		return nil
 	})
 
-	return systemRecord, rebooted, err
+	return systemRecord, transitions, err
 }
 
 func createSystemDetailsRecord(app core.App, data *system.Details, systemId string) error {

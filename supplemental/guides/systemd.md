@@ -114,6 +114,7 @@ After=network.target
 # update the values in curly braces below (remove the braces)
 Environment="PORT={PASTE_YOUR_PORT_HERE}"
 Environment="KEY={PASTE_YOUR_KEY_HERE}"
+# Configured extra filesystems are treated as expected mounts for availability alerts.
 # Environment="EXTRA_FILESYSTEMS={sdb}"
 ExecStart={/path/to/directory}/beszel-agent
 User={YOUR_USERNAME}

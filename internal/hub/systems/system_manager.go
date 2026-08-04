@@ -55,6 +55,7 @@ type hubLike interface {
 	HandleSystemAlerts(systemRecord *core.Record, data *system.CombinedData) error
 	HandleStatusAlerts(status string, systemRecord *core.Record) error
 	HandleRebootAlert(systemRecord *core.Record) error
+	HandleFilesystemAlert(systemRecord *core.Record, previous, current map[string]bool) error
 	CancelPendingStatusAlerts(systemID string)
 }
 

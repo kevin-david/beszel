@@ -128,5 +128,6 @@ func (s *System) CreateRecords(data *entities.CombinedData) (*core.Record, error
 
 func (s *System) CreateRecordsWithReboot(data *entities.CombinedData) (*core.Record, bool, error) {
 	s.data = data
-	return s.createRecords(data)
+	record, transitions, err := s.createRecords(data)
+	return record, transitions.rebooted, err
 }
