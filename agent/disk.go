@@ -154,10 +154,10 @@ func registerFilesystemStats(existing map[string]*system.FsStats, device, mountp
 // addFsStat inserts a discovered filesystem if it resolves to a new tracking
 // key. The key selection itself lives in buildFsStatRegistration so that logic
 // can stay directly unit-tested.
-func (d *diskDiscovery) addFsStat(device, mountpoint string, root bool, customName string) {
+func (d *diskDiscovery) addFsStat(device, mountpoint string, root bool, customName string) *system.FsStats {
 	key, fsStats, ok := registerFilesystemStats(d.agent.fsStats, device, mountpoint, root, customName, d.ctx)
 	if !ok {
-		return
+		return nil
 	}
 	d.agent.fsStats[key] = fsStats
 	name := key
@@ -165,6 +165,7 @@ func (d *diskDiscovery) addFsStat(device, mountpoint string, root bool, customNa
 		name = customName
 	}
 	slog.Info("Detected disk", "name", name, "device", device, "mount", mountpoint, "io", key, "root", root)
+	return fsStats
 }
 
 // addConfiguredRootFs resolves FILESYSTEM against partitions first, then falls
@@ -240,17 +241,24 @@ func findPartitionByFilesystemSetting(filesystem string, partitions []disk.Parti
 	return disk.PartitionStat{}, false
 }
 
-// addConfiguredExtraFsEntry resolves one EXTRA_FILESYSTEMS entry, preferring a
-// discovered partition and falling back to any path that disk.Usage accepts.
+// addConfiguredExtraFsEntry resolves one EXTRA_FILESYSTEMS entry. Entries that
+// match a mounted partition are monitored for availability; other usable paths
+// retain the legacy disk-usage-only behavior.
 func (d *diskDiscovery) addConfiguredExtraFsEntry(filesystem, customName string) {
+	if filesystem == "" {
+		return
+	}
 	if p, found := findPartitionByFilesystemSetting(filesystem, d.partitions); found {
-		d.addFsStat(p.Device, p.Mountpoint, false, customName)
+		if stats := d.addFsStat(p.Device, p.Mountpoint, false, customName); stats != nil {
+			stats.Setting = filesystem
+			stats.Expected = true
+			stats.Available = true
+		}
 		return
 	}
 
 	if _, err := d.usageFn(filesystem); err == nil {
 		d.addFsStat(filepath.Base(filesystem), filesystem, false, customName)
-		return
 	} else {
 		slog.Error("Invalid filesystem", "name", filesystem, "err", err)
 	}
@@ -391,7 +399,7 @@ func (a *Agent) pruneDuplicateRootExtraFilesystems() {
 		return
 	}
 	for name, stats := range a.fsStats {
-		if stats == nil || stats.Root {
+		if stats == nil || stats.Root || stats.Expected {
 			continue
 		}
 		extraUsage, err := disk.Usage(stats.Mountpoint)
@@ -559,8 +567,19 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		!a.lastDiskUsageUpdate.IsZero() &&
 		time.Since(a.lastDiskUsageUpdate) < a.diskUsageCacheDuration
 
+	if hasExpectedFilesystems(a.fsStats) {
+		if partitions, err := disk.PartitionsWithContext(context.Background(), true); err == nil {
+			refreshExpectedFilesystemAvailability(a.fsStats, partitions)
+		} else {
+			slog.Error("Error refreshing disk partitions", "err", err)
+		}
+	}
+
 	// disk usage
 	for _, stats := range a.fsStats {
+		if stats.Expected && !stats.Available {
+			continue
+		}
 		// Skip non-root filesystems if caching is active
 		if cacheExtraFs && !stats.Root {
 			continue
@@ -576,16 +595,49 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		} else {
 			// reset stats if error (likely unmounted)
 			slog.Error("Error getting disk stats", "name", stats.Mountpoint, "err", err)
-			stats.DiskTotal = 0
-			stats.DiskUsed = 0
-			stats.TotalRead = 0
-			stats.TotalWrite = 0
+			resetFilesystemStats(stats)
 		}
 	}
 
 	// Update the last disk usage update time when we've collected extra filesystems
 	if !cacheExtraFs {
 		a.lastDiskUsageUpdate = time.Now()
+	}
+}
+
+func hasExpectedFilesystems(fsStats map[string]*system.FsStats) bool {
+	for _, stats := range fsStats {
+		if stats != nil && stats.Expected {
+			return true
+		}
+	}
+	return false
+}
+
+func resetFilesystemStats(stats *system.FsStats) {
+	stats.DiskTotal = 0
+	stats.DiskUsed = 0
+	stats.TotalRead = 0
+	stats.TotalWrite = 0
+}
+
+// refreshExpectedFilesystemAvailability checks configured filesystems against
+// the current mount table. Checking disk usage alone is insufficient because an
+// unmounted directory may report usage for its parent filesystem.
+func refreshExpectedFilesystemAvailability(fsStats map[string]*system.FsStats, partitions []disk.PartitionStat) {
+	for _, stats := range fsStats {
+		if !stats.Expected {
+			continue
+		}
+		available := false
+		if partition, found := findPartitionByFilesystemSetting(stats.Setting, partitions); found {
+			available = true
+			stats.Mountpoint = partition.Mountpoint
+		}
+		stats.Available = available
+		if !available {
+			resetFilesystemStats(stats)
+		}
 	}
 }
 

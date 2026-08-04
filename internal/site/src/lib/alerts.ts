@@ -99,6 +99,14 @@ export const alertInfo: Record<string, AlertInfo> = {
 		desc: () => t`Triggers when a Linux system restarts`,
 		noSliders: true,
 	},
+	Filesystem: {
+		name: () => t`Filesystem unavailable`,
+		unit: "",
+		icon: HardDriveIcon,
+		desc: () => t`Triggers when a configured filesystem is missing for two consecutive checks`,
+		noSliders: true,
+		activeDesc: () => t`A configured filesystem is unavailable`,
+	},
 } as const
 
 /** Helper to manage user alerts */

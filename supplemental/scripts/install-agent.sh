@@ -987,6 +987,7 @@ Environment="PORT=$PORT"
 Environment="KEY=$KEY"
 Environment="TOKEN=$TOKEN"
 Environment="HUB_URL=$HUB_URL"
+# Extra filesystems discovered as mounts are monitored for availability.
 # Environment="EXTRA_FILESYSTEMS=sdb"
 ExecStart=$BIN_PATH
 User=beszel
