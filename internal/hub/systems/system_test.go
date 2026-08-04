@@ -9,6 +9,56 @@ import (
 	"github.com/henrygd/beszel/internal/entities/system"
 )
 
+func TestRebootedFromUptime(t *testing.T) {
+	const day = 86400
+	tests := []struct {
+		name     string
+		previous uint64
+		current  uint64
+		rebooted bool
+	}{
+		// A restart drops uptime far below the previous observation.
+		{name: "reboot after a day", previous: day, current: 30, rebooted: true},
+		{name: "reboot just past tolerance", previous: 300, current: 300 - rebootUptimeTolerance - 1, rebooted: true},
+
+		// The agent cannot report before it is running, so a zero reading means
+		// the platform is unsupported or the read failed - never a fresh boot.
+		{name: "current read failed after long uptime", previous: day, current: 0},
+		{name: "unsupported platform reports zero forever", previous: 0, current: 0},
+
+		// Falls out of the arithmetic with no special case.
+		{name: "first observation", previous: 0, current: day},
+
+		// Steady state.
+		{name: "normal increase", previous: day, current: day + 60},
+		{name: "unchanged", previous: day, current: day},
+
+		// Wall-clock derived uptime (darwin/BSD/solaris) wobbles without a reboot.
+		{name: "small backwards clock step", previous: day, current: day - 5},
+		{name: "backwards step exactly at tolerance", previous: day, current: day - rebootUptimeTolerance},
+
+		// Accepted limitation: a restart on a host that had only just booted
+		// drops uptime by less than the tolerance, and is not reported.
+		{name: "restart too soon after booting is missed", previous: 130, current: 50},
+
+		// A clock step past boot time underflows uint64 there; neither the
+		// absurd value nor recovering from it may be reported as a reboot.
+		{name: "underflowed current", previous: day, current: ^uint64(0) - 100},
+		{name: "underflowed previous recovering", previous: ^uint64(0) - 100, current: day},
+
+		// The implausibility ceiling must not swallow genuinely long uptimes.
+		{name: "reboot after ten years up", previous: 10 * 365 * day, current: 45, rebooted: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rebootedFromUptime(tt.previous, tt.current); got != tt.rebooted {
+				t.Fatalf("rebootedFromUptime(%d, %d) = %v, want %v", tt.previous, tt.current, got, tt.rebooted)
+			}
+		})
+	}
+}
+
 func TestCombinedData_MigrateDeprecatedFields(t *testing.T) {
 	t.Run("Migrate NetworkSent and NetworkRecv to Bandwidth", func(t *testing.T) {
 		cd := &system.CombinedData{
