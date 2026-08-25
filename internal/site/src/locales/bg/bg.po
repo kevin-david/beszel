@@ -89,10 +89,15 @@ msgstr "30 дни"
 msgid "5 min"
 msgstr "5 минути"
 
+#: src/lib/alerts.ts
+msgid "A configured filesystem is unavailable"
+msgstr ""
+
 #. Table column
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "Действия"
@@ -190,6 +195,10 @@ msgstr "Сигурни ли сте?"
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Автоматичното копиране изисква защитен контескт."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Available"
+msgstr ""
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -380,8 +389,14 @@ msgstr "Проверете мониторинг услугата си"
 msgid "Check your notification service"
 msgstr "Провери услугата си за удостоверяване"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Checksum"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Изчисти"
@@ -393,6 +408,10 @@ msgstr "Кликнете върху контейнер, за да видите �
 #: src/components/routes/system/smart-table.tsx
 msgid "Click on a device to view more information."
 msgstr "Кликнете върху устройство, за да видите повече информация."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Click on a pool to view vdev and dataset details."
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -568,6 +587,10 @@ msgstr "Цикли"
 msgid "Daily"
 msgstr "Дневно"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Dataset"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
@@ -580,6 +603,7 @@ msgstr "Времеви диапазон по подразбиране"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Delete"
 msgstr "Изтрий"
@@ -819,10 +843,19 @@ msgstr "Неуспешни: {0}"
 msgid "Fans"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Filesystem unavailable"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Filter datasets..."
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -843,6 +876,11 @@ msgstr "За <0>{min}</0> {min, plural, one {минута} other {минути}}
 #: src/components/login/auth-form.tsx
 msgid "Forgot password?"
 msgstr "Забравена парола?"
+
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Free"
+msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -888,6 +926,7 @@ msgid "Grid"
 msgstr "Мрежово"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Health"
 msgstr "Здраве"
 
@@ -1085,6 +1124,14 @@ msgstr "Използването на памет от docker контейнер�
 msgid "Model"
 msgstr "Модел"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Mountpoint"
+msgstr ""
+
+#: src/components/alerts-history-columns.tsx
+msgid "N/A"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1120,6 +1167,10 @@ msgstr "Единица за измерване на скорост"
 msgid "No"
 msgstr "Не"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "No detail data for this pool."
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1142,6 +1193,10 @@ msgstr "Няма налични S.M.A.R.T. атрибути за това уст
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "Няма намерени системи."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "None"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1170,6 +1225,7 @@ msgstr "Еднократна парола"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Отвори менюто"
@@ -1178,6 +1234,7 @@ msgstr "Отвори менюто"
 msgid "Or continue with"
 msgstr "Или продължи с"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "Други"
@@ -1293,6 +1350,14 @@ msgstr "Моля виж <0>документацията</0> за инструк�
 msgid "Please sign in to your account"
 msgstr "Моля влез в акаунта ти"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool Health"
+msgstr ""
+
 #: src/components/add-system.tsx
 msgid "Port"
 msgstr "Порт"
@@ -1339,12 +1404,19 @@ msgid "Quiet Hours"
 msgstr "Тихи часове"
 
 #. Disk read
+#. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Read"
 msgstr "Прочети"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -1353,6 +1425,8 @@ msgstr "Получени"
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Refresh"
 msgstr "Опресни"
 
@@ -1448,6 +1522,11 @@ msgstr "Планирай тихи часове, когато няма да се 
 msgid "Schedule quiet hours where notifications will not be sent."
 msgstr "Планирай тихи часове, когато няма да се изпращат известия."
 
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Scrub"
+msgstr ""
+
 #: src/components/navbar.tsx
 msgid "Search"
 msgstr "Търси"
@@ -1523,6 +1602,10 @@ msgstr "Настройките са запазени"
 msgid "Sign in"
 msgstr "Влез"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Size"
+msgstr ""
+
 #: src/components/command-palette.tsx
 msgid "SMTP settings"
 msgstr "Настройки за SMTP"
@@ -1539,6 +1622,7 @@ msgstr "Начален час"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "Състояние"
@@ -1671,6 +1755,10 @@ msgstr "Пропускателна способност на {extraFsName}"
 msgid "Throughput of root filesystem"
 msgstr "Пропускателна способност на root файловата система"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Throughput of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
 msgstr "Формат на времето"
@@ -1742,6 +1830,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Задейства се, когато употребата на паметта за 5 минута надвиши зададен праг"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is missing for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "Задейства се, когато някой даден сензор надвиши зададен праг"
 
@@ -1770,6 +1862,10 @@ msgid "Triggers when status switches between up and down"
 msgstr "Задейства се, когато статуса превключва между долу и горе"
 
 #: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "Задейства се, когато употребата на някой диск надивши зададен праг"
 
@@ -1794,6 +1890,7 @@ msgid "Universal token"
 msgstr "Универсален тоукън"
 
 #. Context: Battery state
+#: src/components/routes/system/zfs-table.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "Неизвестна"
@@ -1819,6 +1916,7 @@ msgstr "Актуализирай"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "Актуализирано"
@@ -1840,6 +1938,7 @@ msgstr "Време на работа"
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Употреба"
@@ -1848,8 +1947,15 @@ msgstr "Употреба"
 msgid "Usage of root partition"
 msgstr "Употреба на root partition-а"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Usage of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Used"
 msgstr "Използвани"
 
@@ -1866,6 +1972,10 @@ msgstr "Натоварване"
 #: src/components/alerts-history-columns.tsx
 msgid "Value"
 msgstr "Стойност"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Vdev"
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
@@ -1924,10 +2034,13 @@ msgid "Windows command"
 msgstr "Команда Windows"
 
 #. Disk write
+#. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Write"
 msgstr "Запиши"
 
@@ -1948,3 +2061,7 @@ msgstr "Да"
 #: src/components/routes/settings/layout.tsx
 msgid "Your user settings have been updated."
 msgstr "Настройките за потребителя ти са обновени."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "ZFS Pool"
+msgstr ""

@@ -89,10 +89,15 @@ msgstr "۳۰ روز"
 msgid "5 min"
 msgstr "۵ دقیقه"
 
+#: src/lib/alerts.ts
+msgid "A configured filesystem is unavailable"
+msgstr ""
+
 #. Table column
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "عملیات"
@@ -190,6 +195,10 @@ msgstr "آیا مطمئن هستید؟"
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "کپی خودکار نیاز به یک زمینه امن دارد."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Available"
+msgstr ""
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -380,8 +389,14 @@ msgstr "سرویس نظارتی خود را بررسی کنید"
 msgid "Check your notification service"
 msgstr "سرویس اطلاع‌رسانی خود را بررسی کنید"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Checksum"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "پاک کردن"
@@ -393,6 +408,10 @@ msgstr "برای مشاهده اطلاعات بیشتر روی کانتینر ک
 #: src/components/routes/system/smart-table.tsx
 msgid "Click on a device to view more information."
 msgstr "برای مشاهده اطلاعات بیشتر روی دستگاه کلیک کنید."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Click on a pool to view vdev and dataset details."
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -568,6 +587,10 @@ msgstr "چرخه‌ها"
 msgid "Daily"
 msgstr "روزانه"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Dataset"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
@@ -580,6 +603,7 @@ msgstr "بازه زمانی پیش‌فرض"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Delete"
 msgstr "حذف"
@@ -819,10 +843,19 @@ msgstr "ناموفق: {0}"
 msgid "Fans"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Filesystem unavailable"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Filter datasets..."
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -843,6 +876,11 @@ msgstr "برای <0>{min}</0> {min, plural, one {دقیقه} other {دقیقه}}
 #: src/components/login/auth-form.tsx
 msgid "Forgot password?"
 msgstr "رمز عبور را فراموش کرده‌اید؟"
+
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Free"
+msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -888,6 +926,7 @@ msgid "Grid"
 msgstr "جدول"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Health"
 msgstr "سلامتی"
 
@@ -1085,6 +1124,14 @@ msgstr "میزان استفاده از حافظه کانتینرهای داکر"
 msgid "Model"
 msgstr "مدل"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Mountpoint"
+msgstr ""
+
+#: src/components/alerts-history-columns.tsx
+msgid "N/A"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1120,6 +1167,10 @@ msgstr "واحد شبکه"
 msgid "No"
 msgstr "خیر"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "No detail data for this pool."
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1142,6 +1193,10 @@ msgstr "هیچ ویژگی S.M.A.R.T برای این دستگاه موجود نی
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "هیچ سیستمی یافت نشد."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "None"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1170,6 +1225,7 @@ msgstr "رمز عبور یک‌بار مصرف"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "باز کردن منو"
@@ -1178,6 +1234,7 @@ msgstr "باز کردن منو"
 msgid "Or continue with"
 msgstr "یا ادامه با"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "سایر"
@@ -1293,6 +1350,14 @@ msgstr "لطفاً برای دستورالعمل‌ها به <0>مستندات</
 msgid "Please sign in to your account"
 msgstr "لطفاً به حساب کاربری خود وارد شوید"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool Health"
+msgstr ""
+
 #: src/components/add-system.tsx
 msgid "Port"
 msgstr "پورت"
@@ -1339,12 +1404,19 @@ msgid "Quiet Hours"
 msgstr "ساعات آرام"
 
 #. Disk read
+#. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Read"
 msgstr "خواندن"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -1353,6 +1425,8 @@ msgstr "دریافت شد"
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Refresh"
 msgstr "تازه‌سازی"
 
@@ -1448,6 +1522,11 @@ msgstr "برنامه‌ریزی ساعات آرام که در آن اعلان‌
 msgid "Schedule quiet hours where notifications will not be sent."
 msgstr "برنامه‌ریزی ساعات آرام که در آن اعلان‌ها ارسال نخواهند شد."
 
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Scrub"
+msgstr ""
+
 #: src/components/navbar.tsx
 msgid "Search"
 msgstr "جستجو"
@@ -1523,6 +1602,10 @@ msgstr "تنظیمات ذخیره شد"
 msgid "Sign in"
 msgstr "ورود"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Size"
+msgstr ""
+
 #: src/components/command-palette.tsx
 msgid "SMTP settings"
 msgstr "تنظیمات SMTP"
@@ -1539,6 +1622,7 @@ msgstr "زمان شروع"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "وضعیت"
@@ -1671,6 +1755,10 @@ msgstr "توان عملیاتی {extraFsName}"
 msgid "Throughput of root filesystem"
 msgstr "توان عملیاتی سیستم فایل ریشه"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Throughput of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
 msgstr "فرمت زمان"
@@ -1742,6 +1830,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "هنگامی که میانگین بار ۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is missing for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "هنگامی که هر حسگری از یک آستانه فراتر رود، فعال می‌شود"
 
@@ -1770,6 +1862,10 @@ msgid "Triggers when status switches between up and down"
 msgstr "هنگامی که وضعیت بین بالا و پایین تغییر می‌کند، فعال می‌شود"
 
 #: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "هنگامی که استفاده از هر دیسکی از یک آستانه فراتر رود، فعال می‌شود"
 
@@ -1794,6 +1890,7 @@ msgid "Universal token"
 msgstr "توکن جهانی"
 
 #. Context: Battery state
+#: src/components/routes/system/zfs-table.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "ناشناخته"
@@ -1819,6 +1916,7 @@ msgstr "به‌روزرسانی"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "به‌روزرسانی شد"
@@ -1840,6 +1938,7 @@ msgstr "آپتایم"
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "میزان استفاده"
@@ -1848,8 +1947,15 @@ msgstr "میزان استفاده"
 msgid "Usage of root partition"
 msgstr "میزان استفاده از پارتیشن ریشه"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Usage of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Used"
 msgstr "استفاده شده"
 
@@ -1866,6 +1972,10 @@ msgstr "بهره‌وری"
 #: src/components/alerts-history-columns.tsx
 msgid "Value"
 msgstr "مقدار"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Vdev"
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
@@ -1924,10 +2034,13 @@ msgid "Windows command"
 msgstr "دستور Windows"
 
 #. Disk write
+#. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Write"
 msgstr "نوشتن"
 
@@ -1948,3 +2061,7 @@ msgstr "بله"
 #: src/components/routes/settings/layout.tsx
 msgid "Your user settings have been updated."
 msgstr "تنظیمات کاربری شما به‌روزرسانی شد."
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "ZFS Pool"
+msgstr ""

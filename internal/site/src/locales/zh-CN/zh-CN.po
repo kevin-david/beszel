@@ -89,10 +89,15 @@ msgstr "30 天"
 msgid "5 min"
 msgstr "5 分钟"
 
+#: src/lib/alerts.ts
+msgid "A configured filesystem is unavailable"
+msgstr ""
+
 #. Table column
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "操作"
@@ -190,6 +195,10 @@ msgstr "您确定吗？"
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "自动复制所需的安全上下文。"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Available"
+msgstr ""
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -380,8 +389,14 @@ msgstr "检查您的监控服务"
 msgid "Check your notification service"
 msgstr "检查您的通知服务"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Checksum"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "清除"
@@ -393,6 +408,10 @@ msgstr "点击容器查看更多信息。"
 #: src/components/routes/system/smart-table.tsx
 msgid "Click on a device to view more information."
 msgstr "点击设备查看更多信息。"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Click on a pool to view vdev and dataset details."
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -568,6 +587,10 @@ msgstr "循环次数"
 msgid "Daily"
 msgstr "每日"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Dataset"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
@@ -580,6 +603,7 @@ msgstr "默认时间段"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Delete"
 msgstr "删除"
@@ -819,10 +843,19 @@ msgstr "失败: {0}"
 msgid "Fans"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Filesystem unavailable"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Filter datasets..."
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -843,6 +876,11 @@ msgstr "持续<0>{min}</0> {min, plural, one {分钟} other {分钟}}"
 #: src/components/login/auth-form.tsx
 msgid "Forgot password?"
 msgstr "忘记密码？"
+
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Free"
+msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -888,6 +926,7 @@ msgid "Grid"
 msgstr "网格"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Health"
 msgstr "健康"
 
@@ -1085,6 +1124,14 @@ msgstr "Docker 容器的内存使用率"
 msgid "Model"
 msgstr "型号"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Mountpoint"
+msgstr ""
+
+#: src/components/alerts-history-columns.tsx
+msgid "N/A"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1120,6 +1167,10 @@ msgstr "网络单位"
 msgid "No"
 msgstr "否"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "No detail data for this pool."
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1142,6 +1193,10 @@ msgstr "此设备没有可用的 S.M.A.R.T. 属性。"
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "未找到系统。"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "None"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1170,6 +1225,7 @@ msgstr "一次性密码"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "打开菜单"
@@ -1178,6 +1234,7 @@ msgstr "打开菜单"
 msgid "Or continue with"
 msgstr "或使用以下方式登录"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "其他"
@@ -1293,6 +1350,14 @@ msgstr "请参阅<0>文档</0>以获取说明。"
 msgid "Please sign in to your account"
 msgstr "请登录您的账户"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool"
+msgstr ""
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Pool Health"
+msgstr ""
+
 #: src/components/add-system.tsx
 msgid "Port"
 msgstr "端口"
@@ -1339,12 +1404,19 @@ msgid "Quiet Hours"
 msgstr "静默时间"
 
 #. Disk read
+#. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Read"
 msgstr "读取"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -1353,6 +1425,8 @@ msgstr "接收"
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Refresh"
 msgstr "刷新"
 
@@ -1448,6 +1522,11 @@ msgstr "安排静默时间，在此期间不会发送通知，例如在维护期
 msgid "Schedule quiet hours where notifications will not be sent."
 msgstr "安排静默时间，在此期间不会发送通知。"
 
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+msgid "Scrub"
+msgstr ""
+
 #: src/components/navbar.tsx
 msgid "Search"
 msgstr "搜索"
@@ -1523,6 +1602,10 @@ msgstr "设置已保存"
 msgid "Sign in"
 msgstr "登录"
 
+#: src/components/routes/system/zfs-table.tsx
+msgid "Size"
+msgstr ""
+
 #: src/components/command-palette.tsx
 msgid "SMTP settings"
 msgstr "SMTP 设置"
@@ -1539,6 +1622,7 @@ msgstr "开始时间"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "状态"
@@ -1671,6 +1755,10 @@ msgstr "{extraFsName}的吞吐量"
 msgid "Throughput of root filesystem"
 msgstr "根文件系统的吞吐量"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Throughput of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
 msgstr "时间格式"
@@ -1742,6 +1830,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "当 5 分钟内的平均负载超过阈值时触发"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is missing for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "当任何传感器超过阈值时触发"
 
@@ -1770,6 +1862,10 @@ msgid "Triggers when status switches between up and down"
 msgstr "当状态在上线与掉线之间切换时触发"
 
 #: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "当任何磁盘的使用率超过阈值时触发"
 
@@ -1794,6 +1890,7 @@ msgid "Universal token"
 msgstr "通用令牌"
 
 #. Context: Battery state
+#: src/components/routes/system/zfs-table.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "未知"
@@ -1819,6 +1916,7 @@ msgstr "更新"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "更新于"
@@ -1840,6 +1938,7 @@ msgstr "运行时间"
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "使用"
@@ -1848,8 +1947,15 @@ msgstr "使用"
 msgid "Usage of root partition"
 msgstr "根分区的使用"
 
+#: src/components/routes/system/charts/zfs-charts.tsx
+msgid "Usage of ZFS pool {poolName}"
+msgstr ""
+
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Used"
 msgstr "已用"
 
@@ -1866,6 +1972,10 @@ msgstr "利用率"
 #: src/components/alerts-history-columns.tsx
 msgid "Value"
 msgstr "值"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "Vdev"
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
@@ -1924,10 +2034,13 @@ msgid "Windows command"
 msgstr "Windows 安装命令"
 
 #. Disk write
+#. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/zfs-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/zfs-table.tsx
 msgid "Write"
 msgstr "写入"
 
@@ -1948,3 +2061,7 @@ msgstr "是"
 #: src/components/routes/settings/layout.tsx
 msgid "Your user settings have been updated."
 msgstr "您的用户设置已更新。"
+
+#: src/components/routes/system/zfs-table.tsx
+msgid "ZFS Pool"
+msgstr ""
