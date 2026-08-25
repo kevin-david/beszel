@@ -44,10 +44,12 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Govulncheck reports the code is affected by zero vulnerabilities.
 - A fresh review found that explicit UI refreshes did not bypass the one-hour agent detail cache and that partial detail-command failures could erase fields. Explicit refresh now forces collection end to end, and partial failures propagate instead of being persisted as fresh data.
 - The first live hub image exposed an upstream release-build defect: unpinned `golang:alpine` resolved to Go 1.27 and the resulting PocketBase binary stack-overflowed during collection migration. The hub was immediately rolled back with its database intact. The hub builder is now pinned to the repository's declared Go 1.26.6 version.
+- The standalone release workflow now also uses `go.mod` as its Go toolchain authority instead of `stable`, preventing Go 1.27-built hub archives from carrying the same startup crash.
+- The pinned live hub is healthy and has persisted all 7 pools and 399 datasets; `usb-hdd` reports 895.16 / 928 GiB (96.46%) with matching raw `zpool` values.
 
 ## Next action
 
-Prove the pinned hub image against a copied production database, re-review the pin, then retry the live hub deployment and verify ZFS values.
+Finish the final release-path review, verify preserved fork behavior, remove this capsule, and push the tested candidate to fork main with the exact lease.
 
 ## Open decisions or blockers
 
