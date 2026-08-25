@@ -587,8 +587,11 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 	// ZFS dataset mountpoints use `zfs list` values because statfs(2) reports
 	// dataset-level usage that excludes child datasets (#1541).
 	var zfsUsage map[string]zfsDatasetUsage
+	var zfsAvailable bool
+	var zfsMountpoints map[string]bool
 	if a.zfsManager != nil {
-		zfsUsage = a.zfsManager.DatasetUsage()
+		zfsUsage, zfsAvailable = a.zfsManager.DatasetUsage()
+		zfsMountpoints = a.zfsManager.ZfsMountpoints()
 	}
 
 	// disk usage
@@ -602,7 +605,15 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		}
 		var total, used uint64
 		var usedPct float64
-		if u, ok := zfsUsage[stats.Mountpoint]; ok {
+		if zfsMountpoints[stats.Mountpoint] && !zfsAvailable {
+			resetFilesystemStats(stats)
+			if stats.Root {
+				systemStats.DiskTotal = 0
+				systemStats.DiskUsed = 0
+				systemStats.DiskPct = 0
+			}
+			continue
+		} else if u, ok := zfsUsage[stats.Mountpoint]; ok {
 			total = u.used + u.avail
 			used = u.used
 			if total > 0 {

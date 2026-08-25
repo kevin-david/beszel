@@ -19,8 +19,13 @@ jobs:
         include:
           - image: ghcr.io/${{ github.repository_owner }}/beszel
             dockerfile: ./internal/dockerfile_hub
+            tags: type=ref,event=tag
           - image: ghcr.io/${{ github.repository_owner }}/beszel-agent
             dockerfile: ./internal/dockerfile_agent
+            tags: type=ref,event=tag
+          - image: ghcr.io/${{ github.repository_owner }}/beszel-agent
+            dockerfile: ./internal/dockerfile_agent_alpine
+            tags: type=ref,event=tag,suffix=-alpine
 
     steps:
       - name: Checkout
@@ -47,7 +52,7 @@ jobs:
         with:
           images: ${{ matrix.image }}
           flavor: latest=false
-          tags: type=ref,event=tag
+          tags: ${{ matrix.tags }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3

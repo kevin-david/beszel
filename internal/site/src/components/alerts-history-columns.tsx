@@ -63,10 +63,10 @@ export const alertsHistoryColumns: ColumnDef<AlertsHistoryRecord>[] = [
 			if (name === "Status") {
 				return <span className="ps-2">{t`Down`}</span>
 			}
-			if (alertInfo[name]?.noSliders) {
+			const value = getValue()
+			if (alertInfo[name]?.noSliders || typeof value !== "number" || !Number.isFinite(value)) {
 				return <span className="ps-2">{t`N/A`}</span>
 			}
-			const value = getValue() as number
 			const unit = alertInfo[name]?.unit
 			return (
 				<span className="tabular-nums ps-2.5">

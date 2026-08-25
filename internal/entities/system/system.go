@@ -43,31 +43,31 @@ type Stats struct {
 	Bandwidth    [2]uint64 `json:"b,omitzero" cbor:"26,keyasint,omitzero"` // [sent bytes, recv bytes]
 	MaxBandwidth [2]uint64 `json:"bm,omitzero" cbor:"-"`                   // [sent bytes, recv bytes]
 	// TODO: remove other load fields in future release in favor of load avg array
-	LoadAvg           [3]float64           `json:"la,omitempty" cbor:"28,keyasint"`
-	Battery           [2]uint8             `json:"bat,omitzero" cbor:"29,keyasint,omitzero"`    // [percent, charge state]
-	NetworkInterfaces map[string][4]uint64 `json:"ni,omitempty" cbor:"31,keyasint,omitempty"`   // [upload bytes, download bytes, total upload, total download]
-	DiskIO            [2]uint64            `json:"dio,omitzero" cbor:"32,keyasint,omitzero"`    // [read bytes, write bytes]
-	MaxDiskIO         [2]uint64            `json:"diom,omitzero" cbor:"-"`                      // [max read bytes, max write bytes]
-	CpuBreakdown      []float64            `json:"cpub,omitempty" cbor:"33,keyasint,omitempty"` // [user, system, iowait, steal, idle]
-	CpuCoresUsage     Uint8Slice           `json:"cpus,omitempty" cbor:"34,keyasint,omitempty"` // per-core busy usage [CPU0..]
-	DiskIoStats       [6]float64           `json:"dios,omitzero" cbor:"35,keyasint,omitzero"`   // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
-	MaxDiskIoStats    [6]float64           `json:"diosm,omitzero" cbor:"-"`                     // max values for DiskIoStats
-	ZfsPools          map[string]*ZfsPool  `json:"z,omitempty" cbor:"36,keyasint,omitempty"`    // ZFS pool metrics, keyed by pool name
-	ZfsDatasets       map[string]*ZfsDataset `json:"zd,omitempty" cbor:"37,keyasint,omitempty"` // ZFS dataset usage, keyed by dataset name
+	LoadAvg           [3]float64             `json:"la,omitempty" cbor:"28,keyasint"`
+	Battery           [2]uint8               `json:"bat,omitzero" cbor:"29,keyasint,omitzero"`    // [percent, charge state]
+	NetworkInterfaces map[string][4]uint64   `json:"ni,omitempty" cbor:"31,keyasint,omitempty"`   // [upload bytes, download bytes, total upload, total download]
+	DiskIO            [2]uint64              `json:"dio,omitzero" cbor:"32,keyasint,omitzero"`    // [read bytes, write bytes]
+	MaxDiskIO         [2]uint64              `json:"diom,omitzero" cbor:"-"`                      // [max read bytes, max write bytes]
+	CpuBreakdown      []float64              `json:"cpub,omitempty" cbor:"33,keyasint,omitempty"` // [user, system, iowait, steal, idle]
+	CpuCoresUsage     Uint8Slice             `json:"cpus,omitempty" cbor:"34,keyasint,omitempty"` // per-core busy usage [CPU0..]
+	DiskIoStats       [6]float64             `json:"dios,omitzero" cbor:"35,keyasint,omitzero"`   // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
+	MaxDiskIoStats    [6]float64             `json:"diosm,omitzero" cbor:"-"`                     // max values for DiskIoStats
+	ZfsPools          map[string]*ZfsPool    `json:"z,omitempty" cbor:"38,keyasint,omitempty"`    // ZFS pool metrics, keyed by pool name
+	ZfsDatasets       map[string]*ZfsDataset `json:"zd,omitempty" cbor:"39,keyasint,omitempty"`   // ZFS dataset usage, keyed by dataset name
 }
 
 // ZfsDataset holds usage for a single ZFS dataset for one collection interval.
 type ZfsDataset struct {
-	Total float64 `json:"d" cbor:"0,keyasint"`   // used + avail in GiB
-	Used  float64 `json:"du" cbor:"1,keyasint"`  // used in GiB (includes child datasets)
+	Total float64 `json:"d" cbor:"0,keyasint"`  // used + avail in GiB
+	Used  float64 `json:"du" cbor:"1,keyasint"` // used in GiB (includes child datasets)
 }
 
 // ZfsPool holds per-pool ZFS metrics for a single collection interval.
 type ZfsPool struct {
-	Total      float64 `json:"d" cbor:"0,keyasint"`    // total capacity in GiB
-	Used       float64 `json:"du" cbor:"1,keyasint"`   // allocated in GiB
-	ReadBytes  uint64  `json:"rb,omitzero" cbor:"2,keyasint,omitzero"` // read throughput in bytes/s
-	WriteBytes uint64  `json:"wb,omitzero" cbor:"3,keyasint,omitzero"` // write throughput in bytes/s
+	Total      float64 `json:"d" cbor:"0,keyasint"`                     // total capacity in GiB
+	Used       float64 `json:"du" cbor:"1,keyasint"`                    // allocated in GiB
+	ReadBytes  uint64  `json:"rb,omitzero" cbor:"2,keyasint,omitzero"`  // read throughput in bytes/s
+	WriteBytes uint64  `json:"wb,omitzero" cbor:"3,keyasint,omitzero"`  // write throughput in bytes/s
 	Health     string  `json:"h,omitempty" cbor:"4,keyasint,omitempty"` // ONLINE, DEGRADED, FAULTED, ...
 }
 

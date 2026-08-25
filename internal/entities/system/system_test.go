@@ -35,3 +35,25 @@ func TestStatsLegacyBatteryPayload(t *testing.T) {
 	assert.Contains(t, payload, "bat")
 	assert.NotContains(t, payload, "bats")
 }
+
+func TestStatsZfsTransportDoesNotCollideWithSensors(t *testing.T) {
+	stats := Stats{
+		Fans:      map[string]uint16{"cpu": 1400},
+		Batteries: map[string]uint8{"ups": 75},
+		ZfsPools: map[string]*ZfsPool{
+			"tank": {Total: 100, Used: 60, Health: "ONLINE"},
+		},
+		ZfsDatasets: map[string]*ZfsDataset{
+			"tank/data": {Total: 80, Used: 50},
+		},
+	}
+
+	cborData, err := cbor.Marshal(stats)
+	require.NoError(t, err)
+	var decoded Stats
+	require.NoError(t, cbor.Unmarshal(cborData, &decoded))
+	assert.Equal(t, stats.Fans, decoded.Fans)
+	assert.Equal(t, stats.Batteries, decoded.Batteries)
+	assert.Equal(t, stats.ZfsPools, decoded.ZfsPools)
+	assert.Equal(t, stats.ZfsDatasets, decoded.ZfsDatasets)
+}

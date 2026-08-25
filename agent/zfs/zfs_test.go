@@ -4,6 +4,7 @@ package zfs
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -84,6 +85,19 @@ func TestPoolIoWatcherIgnoresHeaders(t *testing.T) {
 	w.handleLine("----------  ---------------  ---------------  ---------------  ---------------  ---------------  ---------------")
 	_, ok := w.Latest()
 	assert.False(t, ok, "no pool rows should yield no sample")
+}
+
+func TestPoolIoWatcherReapsProcess(t *testing.T) {
+	cmd := exec.Command("sh", "-c", "printf 'tank 1 1 0 0 1 2\\n'")
+	stdout, err := cmd.StdoutPipe()
+	require.NoError(t, err)
+	require.NoError(t, cmd.Start())
+	w := &PoolIoWatcher{cmd: cmd, latest: make(map[string]PoolIoStats), stopped: true}
+
+	w.readLoop(cmd, stdout)
+
+	require.NotNil(t, cmd.ProcessState, "read loop must call Wait and reap its child")
+	assert.True(t, cmd.ProcessState.Exited())
 }
 
 func TestParseZpoolStatusOutput(t *testing.T) {

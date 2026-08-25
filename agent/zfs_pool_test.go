@@ -9,6 +9,7 @@ import (
 
 	"github.com/henrygd/beszel/agent/zfs"
 	"github.com/henrygd/beszel/internal/entities/system"
+	zfsentity "github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +55,8 @@ func TestUpdatePopulatesZfsPools(t *testing.T) {
 	// precision (no 2-decimal GB rounding).
 	require.NotNil(t, stats.ZfsDatasets)
 	require.Contains(t, stats.ZfsDatasets, "tank/apps")
-	assert.InDelta(t, 4656.6129, stats.ZfsDatasets["tank/apps"].Used, 0.0001) // 5 TiB in GiB
+	assert.InDelta(t, 15831.5524, stats.ZfsDatasets["tank/apps"].Total, 0.0001) // Used + avail in GiB
+	assert.InDelta(t, 4656.6129, stats.ZfsDatasets["tank/apps"].Used, 0.0001)   // 5 TiB in GiB
 	require.Contains(t, stats.ZfsDatasets, "tank/backup")
 	assert.InDelta(t, 5587.9354, stats.ZfsDatasets["tank/backup"].Used, 0.0001)
 	// Small datasets survive the conversion: 4 MiB == 0.00390625 GiB.
@@ -135,7 +137,8 @@ func TestDatasetUsage(t *testing.T) {
 		}, nil
 	}
 
-	usage := zm.DatasetUsage()
+	usage, available := zm.DatasetUsage()
+	require.True(t, available)
 	require.Len(t, usage, 2)
 	assert.Equal(t, zfsDatasetUsage{used: 12000000000000, avail: 11999000000000}, usage["/tank"])
 	assert.Equal(t, zfsDatasetUsage{used: 1000000000000, avail: 11999000000000}, usage["/tank/apps"])
@@ -146,20 +149,69 @@ func TestDatasetUsage(t *testing.T) {
 	assert.Equal(t, 1, calls)
 }
 
-func TestDatasetUsageRefreshOnErrorKeepsPrevious(t *testing.T) {
+func TestDatasetUsageRefreshOnErrorFailsClosed(t *testing.T) {
 	zm := &ZfsManager{}
 	zm.datasetsFn = func() ([]zfs.Dataset, error) {
 		return []zfs.Dataset{{Name: "tank", Used: 1, Avail: 1, Mountpoint: "/tank"}}, nil
 	}
-	assert.Len(t, zm.DatasetUsage(), 1)
+	usage, available := zm.DatasetUsage()
+	require.True(t, available)
+	assert.Len(t, usage, 1)
 
 	// Force refresh window expiry, then a failing collector.
 	zm.lastUsageRefresh = time.Now().Add(-10 * time.Minute)
 	zm.datasetsFn = func() ([]zfs.Dataset, error) {
 		return nil, zfs.ErrNoZfs
 	}
-	usage := zm.DatasetUsage()
-	assert.Len(t, usage, 1, "previous usage should be retained on error")
+	usage, available = zm.DatasetUsage()
+	assert.False(t, available)
+	assert.Empty(t, usage, "failed refresh must not return stale usage")
+	assert.True(t, zm.ZfsMountpoints()["/tank"], "known identity is retained to prevent statfs fallback")
+}
+
+func TestUpdatePoolStatsFailureFailsClosed(t *testing.T) {
+	failed := false
+	zm := &ZfsManager{
+		poolStatsFn: func() ([]zfs.PoolStat, error) {
+			if failed {
+				return nil, errors.New("zpool unavailable")
+			}
+			return []zfs.PoolStat{{Name: "tank", Size: 10, Alloc: 5, Health: "ONLINE"}}, nil
+		},
+		datasetsFn: func() ([]zfs.Dataset, error) { return nil, nil },
+	}
+	var first system.Stats
+	zm.Update(&first)
+	require.Contains(t, first.ZfsPools, "tank")
+
+	failed = true
+	zm.lastPoolStats = time.Now().Add(-poolStatsRefreshInterval)
+	var second system.Stats
+	zm.Update(&second)
+	assert.Nil(t, second.ZfsPools, "failed refresh must not publish the cached pool as current")
+}
+
+func TestGetDetailPropagatesCollectionFailure(t *testing.T) {
+	zm := &ZfsManager{
+		poolStatsFn:       func() ([]zfs.PoolStat, error) { return nil, errors.New("zpool unavailable") },
+		detail:            &zfsentity.ZfsData{Pools: []*zfsentity.PoolDetail{{Name: "stale"}}},
+		lastDetailRefresh: time.Now().Add(-time.Hour),
+		detailInterval:    time.Minute,
+	}
+	detail, err := zm.GetDetail()
+	assert.Error(t, err)
+	assert.Nil(t, detail, "stale detail must not be returned as a fresh response")
+}
+
+func TestGetDetailTreatsEmptyPoolInventoryAsAuthoritative(t *testing.T) {
+	zm := &ZfsManager{
+		poolStatsFn:    func() ([]zfs.PoolStat, error) { return nil, nil },
+		detailInterval: time.Minute,
+	}
+	detail, err := zm.GetDetail()
+	require.NoError(t, err)
+	require.NotNil(t, detail)
+	assert.Empty(t, detail.Pools)
 }
 
 func TestZfsMountpoints(t *testing.T) {

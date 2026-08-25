@@ -64,6 +64,8 @@ func TestZfsPoolAlertDegradedToFaulted(t *testing.T) {
 		"health": "DEGRADED",
 	})
 	assert.NoError(t, err)
+	time.Sleep(50 * time.Millisecond)
+	hub.TestMailer.Reset()
 
 	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
 	assert.NoError(t, err)
@@ -96,6 +98,8 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 		"health": "DEGRADED",
 	})
 	assert.NoError(t, err)
+	time.Sleep(50 * time.Millisecond)
+	hub.TestMailer.Reset()
 
 	// Trigger a worsening alert first
 	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
@@ -121,7 +125,7 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 	requireHistoryResolved(t, history)
 }
 
-func TestZfsPoolAlertNoAlertOnUnknownState(t *testing.T) {
+func TestZfsPoolAlertOnInitialFaultedState(t *testing.T) {
 	hub, user := beszelTests.GetHubWithUser(t)
 	defer hub.Cleanup()
 
@@ -132,23 +136,31 @@ func TestZfsPoolAlertNoAlertOnUnknownState(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	pool, err := beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
+	_, err = beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
 		"system": system.Id,
 		"name":   "tank",
-		"health": "",
+		"health": "FAULTED",
 	})
-	assert.NoError(t, err)
-
-	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
-	assert.NoError(t, err)
-
-	pool.Set("health", "FAULTED")
-	err = hub.Save(pool)
 	assert.NoError(t, err)
 
 	time.Sleep(50 * time.Millisecond)
 
-	assert.Zero(t, hub.TestMailer.TotalSend(), "should have 0 emails when changing from unknown state to FAULTED")
+	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "initially unhealthy pool should alert")
+}
+
+func TestZfsPoolAlertNoAlertOnInitialOnlineState(t *testing.T) {
+	hub, user := beszelTests.GetHubWithUser(t)
+	defer hub.Cleanup()
+	system, err := beszelTests.CreateRecord(hub, "systems", map[string]any{
+		"name": "test-system", "users": []string{user.Id}, "host": "127.0.0.1",
+	})
+	require.NoError(t, err)
+	_, err = beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
+		"system": system.Id, "name": "tank", "health": "ONLINE",
+	})
+	require.NoError(t, err)
+	time.Sleep(50 * time.Millisecond)
+	assert.Zero(t, hub.TestMailer.TotalSend())
 }
 
 func TestZfsPoolAlertWritesHistory(t *testing.T) {

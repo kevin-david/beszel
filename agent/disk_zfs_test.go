@@ -3,7 +3,9 @@
 package agent
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/henrygd/beszel/agent/zfs"
 	"github.com/henrygd/beszel/internal/entities/system"
@@ -11,6 +13,31 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestUpdateDiskUsageZfsRefreshFailureDoesNotFallBackToStatfs(t *testing.T) {
+	failed := false
+	zm := &ZfsManager{datasetsFn: func() ([]zfs.Dataset, error) {
+		if failed {
+			return nil, errors.New("zfs unavailable")
+		}
+		return []zfs.Dataset{{Name: "rpool", Used: 10_000_000_000, Avail: 10_000_000_000, Mountpoint: "/"}}, nil
+	}}
+	agent := &Agent{
+		fsStats: map[string]*system.FsStats{
+			"rpool": {Root: true, Mountpoint: "/"},
+		},
+		zfsManager: zm,
+	}
+	var stats system.Stats
+	agent.updateDiskUsage(&stats)
+	require.NotZero(t, agent.fsStats["rpool"].DiskTotal)
+
+	failed = true
+	zm.lastUsageRefresh = time.Now().Add(-datasetUsageRefreshInterval)
+	agent.updateDiskUsage(&stats)
+	assert.Zero(t, agent.fsStats["rpool"].DiskTotal)
+	assert.Zero(t, stats.DiskTotal)
+}
 
 // TestUpdateDiskUsageZfsMountpoint verifies that a filesystem whose mountpoint
 // is a ZFS dataset reports `zfs list` usage (which includes child datasets)

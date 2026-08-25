@@ -8,6 +8,8 @@ import { useStore } from "@nanostores/react"
 import { $userSettings } from "@/lib/stores"
 import type { SystemData } from "../use-system-data"
 
+const maxZfsDatasetSeries = 12
+
 // Accessors for ZFS metrics
 const datasetUsage = (name: string) => ({ stats }: SystemStatsRecord) => stats?.zd?.[name]?.du ?? 0
 const poolRead = (name: string) => ({ stats }: SystemStatsRecord) => stats?.z?.[name]?.rb ?? 0
@@ -27,7 +29,7 @@ function poolLeafDatasets(poolName: string, datasets: Record<string, ZfsDatasetU
 // (root dataset data, snapshots, reserved), making the stacked total equal the
 // pool's overall used.
 const poolOtherUsage =
-	(poolName: string) =>
+	(poolName: string, displayedLeaves: string[]) =>
 	({ stats }: SystemStatsRecord) => {
 		const pool = stats?.z?.[poolName]
 		const datasets = stats?.zd
@@ -35,8 +37,8 @@ const poolOtherUsage =
 			return null
 		}
 		let sum = 0
-		for (const name of poolLeafDatasets(poolName, datasets)) {
-			sum += datasets[name].du
+		for (const name of displayedLeaves) {
+			sum += datasets[name]?.du ?? 0
 		}
 		return Math.max(pool.du - sum, 0)
 	}
@@ -50,6 +52,8 @@ export function ZfsPoolUsageChart({ systemData, poolName }: { systemData: System
 	}
 	const datasets = latest?.zd ?? {}
 	const leaves = poolLeafDatasets(poolName, datasets)
+		.sort((a, b) => (datasets[b]?.du ?? 0) - (datasets[a]?.du ?? 0))
+		.slice(0, maxZfsDatasetSeries)
 	const latestOther = Math.max(
 		pool.du - leaves.reduce((sum, name) => sum + (datasets[name]?.du ?? 0), 0),
 		0
@@ -66,7 +70,7 @@ export function ZfsPoolUsageChart({ systemData, poolName }: { systemData: System
 	if (latestOther > 0) {
 		dataPoints.unshift({
 			label: t`Other`,
-			dataKey: poolOtherUsage(poolName),
+			dataKey: poolOtherUsage(poolName, leaves),
 			color: "hsla(0 0% 50% / 0.6)",
 			opacity: 0.4,
 			stackId: "1",

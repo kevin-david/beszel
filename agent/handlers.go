@@ -189,7 +189,11 @@ func (h *GetZfsDataHandler) Handle(hctx *HandlerContext) error {
 	if hctx.Agent.zfsManager == nil {
 		return hctx.SendResponse(nil, hctx.RequestID)
 	}
-	return hctx.SendResponse(hctx.Agent.zfsManager.GetDetail(), hctx.RequestID)
+	detail, err := hctx.Agent.zfsManager.GetDetail()
+	if err != nil {
+		return err
+	}
+	return hctx.SendResponse(detail, hctx.RequestID)
 }
 
 ////////////////////////////////////////////////////////////////////////////

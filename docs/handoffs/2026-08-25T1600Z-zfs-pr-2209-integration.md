@@ -1,7 +1,7 @@
 # Resume — ZFS PR #2209 integration
 
 Created: 2026-08-25T1600Z
-Updated: 2026-08-25T1606Z
+Updated: 2026-08-25T1625Z
 Branch: kd/zfs-pr-2209-test
 
 ## Goal
@@ -31,10 +31,19 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Confirmed the broader WebSocket status timing failures reproduce unchanged on current upstream main, so they are baseline failures rather than an integration regression.
 - Integrated configured-filesystem disappearance tracking with ZFS dataset usage: availability refresh runs first, unavailable mounts are skipped, and available ZFS mounts use `zfs list` accounting.
 - Verified focused agent, ZFS, disk, alert, hub, and migration tests after the semantic merge.
+- Completed the first independent review. It found a CBOR field collision, stale-on-error metrics, a missing ZFS-capable fork image, unsafe alert-history rendering, an unreaped watcher process, unbounded chart fan-out, and missing initial unhealthy-pool alerts.
+- Moved ZFS initialization ahead of disk discovery so ZFS mountpoints are known when disk I/O tracking is initialized.
+- Assigned ZFS stats fresh CBOR keys and added a sensor-plus-ZFS round-trip regression test.
+- Added ZFS pool and dataset aggregation to historical records, including dataset total capacity.
+- Changed current pool and dataset collection to fail closed, while retaining ZFS mountpoint identity so failures do not fall back to misleading statfs values.
+- Made detail collection propagate failures and treat a successful empty pool inventory as authoritative, including pruning removed pool records.
+- Added initial unhealthy-pool alerts, safe N/A alert-history rendering, a 12-series chart cap with the remainder aggregated into Other, and exact child-process reaping.
+- Added a fork Alpine agent image tag so released users can opt into an image containing `zpool` and `zfs`.
+- Focused regression tests for all Go changes pass.
 
 ## Next action
 
-Commit configured-filesystem disappearance alerts, then inspect the complete candidate and address integration defects.
+Run frontend and broad verification, commit the review fixes, obtain a fresh independent review, then deploy the candidate on virusdesk.
 
 ## Open decisions or blockers
 

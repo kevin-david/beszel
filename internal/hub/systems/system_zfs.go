@@ -62,11 +62,11 @@ func (sys *System) zfsFetchInterval() time.Duration {
 }
 
 // saveZfsPools saves ZFS pool detail data to the zfs_pools collection and
-// removes records for pools no longer reported by the agent. Stale records are
-// only pruned on a non-empty payload so a transient fetch failure never wipes
-// them (or prematurely resolves their alerts).
+// removes records for pools no longer reported by the agent. Collection
+// failures do not reach this function; an empty successful payload is
+// authoritative and removes pools that disappeared.
 func (sys *System) saveZfsPools(zfsData *zfs.ZfsData) error {
-	if zfsData == nil || len(zfsData.Pools) == 0 {
+	if zfsData == nil {
 		return nil
 	}
 

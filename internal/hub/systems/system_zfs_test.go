@@ -7,9 +7,28 @@ import (
 	"testing"
 	"time"
 
+	"github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/henrygd/beszel/internal/hub/expirymap"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestSaveZfsPoolsEmptyPayloadPrunesRemovedPools(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	collection, err := app.FindCachedCollectionByNameOrId("zfs_pools")
+	require.NoError(t, err)
+	record := core.NewRecord(collection)
+	record.Set("system", sys.Id)
+	record.Set("name", "removed-pool")
+	require.NoError(t, app.SaveNoValidate(record))
+
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{}))
+	remaining, err := app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, dbx.Params{"system": sys.Id})
+	require.NoError(t, err)
+	assert.Empty(t, remaining)
+}
 
 func TestRecordZfsFetchResult(t *testing.T) {
 	sm := &SystemManager{zfsFetchMap: expirymap.New[zfsFetchState](time.Hour)}

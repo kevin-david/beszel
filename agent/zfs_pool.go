@@ -51,6 +51,8 @@ type ZfsManager struct {
 
 	datasetUsage     map[string]zfsDatasetUsage // mountpoint -> usage
 	datasetStats     map[string]zfsDatasetUsage // dataset name -> usage
+	knownMountpoints map[string]bool            // last successful ZFS mountpoint inventory
+	datasetAvailable bool                       // latest refresh completed successfully
 	lastUsageRefresh time.Time
 
 	// Detail data (pools, vdevs, scrub, datasets) is cached and refreshed on
@@ -114,20 +116,22 @@ func (zm *ZfsManager) Update(systemStats *system.Stats) {
 		}
 		for name, ds := range datasetStats {
 			systemStats.ZfsDatasets[name] = &system.ZfsDataset{
-				Used: float64(ds.used) / (1024 * 1024 * 1024),
+				Total: float64(ds.used+ds.avail) / (1024 * 1024 * 1024),
+				Used:  float64(ds.used) / (1024 * 1024 * 1024),
 			}
 		}
 	}
 }
 
 // poolStats returns the cached pool inventory, re-running `zpool list` at most
-// every poolStatsRefreshInterval. On failure the previous inventory is
-// retained and the refresh is retried on the next cadence.
+// every poolStatsRefreshInterval. A failed refresh clears the current sample
+// so stale capacity or health is never published as fresh.
 func (zm *ZfsManager) poolStats() []zfs.PoolStat {
 	if zm.poolData == nil || time.Since(zm.lastPoolStats) >= poolStatsRefreshInterval {
 		pools, err := zm.poolStatsFn()
 		if err != nil {
 			slog.Debug("ZFS pool stats unavailable", "err", err)
+			zm.poolData = nil
 		} else {
 			zm.poolData = pools
 		}
@@ -167,27 +171,34 @@ func (zm *ZfsManager) refreshDatasetUsage() {
 	datasets, err := zm.datasetsFn()
 	if err != nil {
 		slog.Debug("ZFS dataset usage unavailable", "err", err)
+		zm.datasetUsage = nil
+		zm.datasetStats = nil
+		zm.datasetAvailable = false
 	} else {
 		usage := make(map[string]zfsDatasetUsage, len(datasets))
 		stats := make(map[string]zfsDatasetUsage, len(datasets))
+		mountpoints := make(map[string]bool, len(datasets))
 		for _, ds := range datasets {
 			if ds.Mountpoint != "" && ds.Mountpoint != "-" {
 				usage[ds.Mountpoint] = zfsDatasetUsage{used: ds.Used, avail: ds.Avail}
+				mountpoints[ds.Mountpoint] = true
 			}
 			stats[ds.Name] = zfsDatasetUsage{used: ds.Used, avail: ds.Avail}
 		}
 		zm.datasetUsage = usage
 		zm.datasetStats = stats
+		zm.knownMountpoints = mountpoints
+		zm.datasetAvailable = true
 	}
 	zm.lastUsageRefresh = time.Now()
 }
 
-// DatasetUsage returns ZFS dataset usage keyed by mountpoint, refreshed at
-// most every datasetUsageRefreshInterval. On failure the previous map is
-// retained and a debug log is emitted.
-func (zm *ZfsManager) DatasetUsage() map[string]zfsDatasetUsage {
+// DatasetUsage returns ZFS dataset usage keyed by mountpoint and whether the
+// latest refresh succeeded. Known ZFS mountpoints are retained separately so
+// callers can avoid falling back to semantically different statfs values.
+func (zm *ZfsManager) DatasetUsage() (map[string]zfsDatasetUsage, bool) {
 	zm.refreshDatasetUsage()
-	return zm.datasetUsage
+	return zm.datasetUsage, zm.datasetAvailable
 }
 
 // DatasetStats returns ZFS dataset usage keyed by dataset name (for per-dataset
@@ -198,24 +209,25 @@ func (zm *ZfsManager) DatasetStats() map[string]zfsDatasetUsage {
 }
 
 // GetDetail returns cached ZFS detail data (pool health, scrub, vdevs,
-// datasets), refreshing it when stale. On failure the previous snapshot is
-// retained; an empty payload is returned when nothing has been collected.
-func (zm *ZfsManager) GetDetail() *zfsentity.ZfsData {
+// datasets), refreshing it when stale. Collection errors are propagated so a
+// cached snapshot is not persisted again with a fresh timestamp.
+func (zm *ZfsManager) GetDetail() (*zfsentity.ZfsData, error) {
 	zm.detailMu.Lock()
 	defer zm.detailMu.Unlock()
 
 	if zm.detail == nil || time.Since(zm.lastDetailRefresh) >= zm.detailInterval {
 		if data, err := zm.collectDetail(); err != nil {
 			slog.Debug("ZFS detail collection failed", "err", err)
+			return nil, err
 		} else {
 			zm.detail = data
 		}
 		zm.lastDetailRefresh = time.Now()
 	}
 	if zm.detail == nil {
-		return &zfsentity.ZfsData{}
+		return &zfsentity.ZfsData{}, nil
 	}
-	return zm.detail
+	return zm.detail, nil
 }
 
 // collectDetail builds a ZfsData payload from the current system state.
@@ -225,7 +237,7 @@ func (zm *ZfsManager) collectDetail() (*zfsentity.ZfsData, error) {
 		return nil, err
 	}
 	if len(pools) == 0 {
-		return nil, zfs.ErrNoZfs
+		return &zfsentity.ZfsData{}, nil
 	}
 
 	statuses, err := zfs.PoolStatuses()
@@ -297,9 +309,9 @@ func poolOfDataset(name string) string {
 
 // ZfsMountpoints returns the set of mountpoints backed by ZFS datasets.
 func (zm *ZfsManager) ZfsMountpoints() map[string]bool {
-	usage := zm.DatasetUsage()
-	mountpoints := make(map[string]bool, len(usage))
-	for mountpoint := range usage {
+	zm.refreshDatasetUsage()
+	mountpoints := make(map[string]bool, len(zm.knownMountpoints))
+	for mountpoint := range zm.knownMountpoints {
 		mountpoints[mountpoint] = true
 	}
 	return mountpoints

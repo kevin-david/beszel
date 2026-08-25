@@ -332,6 +332,48 @@ func AverageSystemStatsSlice(records []system.Stats) system.Stats {
 			}
 		}
 
+		// Accumulate ZFS pool and dataset statistics so they remain available
+		// after one-minute records are rolled into longer retention tiers.
+		if stats.ZfsPools != nil {
+			if sum.ZfsPools == nil {
+				sum.ZfsPools = make(map[string]*system.ZfsPool, len(stats.ZfsPools))
+			}
+			for name, value := range stats.ZfsPools {
+				if value == nil {
+					continue
+				}
+				pool, ok := sum.ZfsPools[name]
+				if !ok {
+					pool = &system.ZfsPool{}
+					sum.ZfsPools[name] = pool
+				}
+				pool.Total += value.Total
+				pool.Used += value.Used
+				pool.ReadBytes += value.ReadBytes
+				pool.WriteBytes += value.WriteBytes
+				if value.Health != "" {
+					pool.Health = value.Health
+				}
+			}
+		}
+		if stats.ZfsDatasets != nil {
+			if sum.ZfsDatasets == nil {
+				sum.ZfsDatasets = make(map[string]*system.ZfsDataset, len(stats.ZfsDatasets))
+			}
+			for name, value := range stats.ZfsDatasets {
+				if value == nil {
+					continue
+				}
+				dataset, ok := sum.ZfsDatasets[name]
+				if !ok {
+					dataset = &system.ZfsDataset{}
+					sum.ZfsDatasets[name] = dataset
+				}
+				dataset.Total += value.Total
+				dataset.Used += value.Used
+			}
+		}
+
 		// Accumulate GPU data
 		if stats.GPUData != nil {
 			if sum.GPUData == nil {
@@ -440,6 +482,18 @@ func AverageSystemStatsSlice(records []system.Stats) system.Stats {
 				fs.DiskIoStats[i] = twoDecimals(fs.DiskIoStats[i] / count)
 			}
 		}
+	}
+
+	// Average ZFS pool and dataset statistics.
+	for _, pool := range sum.ZfsPools {
+		pool.Total = twoDecimals(pool.Total / count)
+		pool.Used = twoDecimals(pool.Used / count)
+		pool.ReadBytes /= uint64(count)
+		pool.WriteBytes /= uint64(count)
+	}
+	for _, dataset := range sum.ZfsDatasets {
+		dataset.Total = twoDecimals(dataset.Total / count)
+		dataset.Used = twoDecimals(dataset.Used / count)
 	}
 
 	// Average GPU data

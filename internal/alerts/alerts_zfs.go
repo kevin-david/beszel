@@ -75,10 +75,10 @@ func resolveZfsPoolHistoryOnDelete(e *core.RecordEvent) error {
 }
 
 // shouldSendZfsPoolAlert reports whether a health transition warrants an alert.
-// Only worsening transitions from known states are reported; recoveries and
-// unknown states are ignored.
+// Worsening transitions and initially unhealthy pools are reported;
+// recoveries, healthy creation, and unknown states are ignored.
 func shouldSendZfsPoolAlert(oldSeverity, newSeverity int) bool {
-	return oldSeverity >= 1 && newSeverity > oldSeverity
+	return (oldSeverity == 0 && newSeverity > 1) || (oldSeverity >= 1 && newSeverity > oldSeverity)
 }
 
 // zfsPoolSeverity ranks pool health states: healthy (1), degraded (2),

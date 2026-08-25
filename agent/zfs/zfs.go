@@ -74,7 +74,7 @@ func (w *PoolIoWatcher) start() error {
 		return err
 	}
 	w.cmd = cmd
-	go w.readLoop(stdout)
+	go w.readLoop(cmd, stdout)
 	return nil
 }
 
@@ -82,13 +82,16 @@ func (w *PoolIoWatcher) start() error {
 // stopped. A failed restart is retried on a short cadence so transient spawn
 // failures do not kill pool I/O permanently. When the agent process exits, the
 // zpool child receives SIGPIPE on the closed pipe and terminates on its own.
-func (w *PoolIoWatcher) readLoop(stdout io.Reader) {
+func (w *PoolIoWatcher) readLoop(cmd *exec.Cmd, stdout io.Reader) {
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		w.handleLine(scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
 		slog.Debug("ZFS pool I/O watcher stream ended", "err", err)
+	}
+	if err := cmd.Wait(); err != nil {
+		slog.Debug("ZFS pool I/O watcher process ended", "err", err)
 	}
 	for {
 		w.mu.Lock()
@@ -144,10 +147,11 @@ func (w *PoolIoWatcher) Latest() (map[string]PoolIoStats, bool) {
 // Stop terminates the iostat process and disables restarts.
 func (w *PoolIoWatcher) Stop() {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	w.stopped = true
-	if w.cmd != nil && w.cmd.Process != nil {
-		_ = w.cmd.Process.Kill()
+	cmd := w.cmd
+	w.mu.Unlock()
+	if cmd != nil && cmd.Process != nil {
+		_ = cmd.Process.Kill()
 	}
 }
 

@@ -702,6 +702,36 @@ func TestAverageSystemStatsSlice_TenRecords(t *testing.T) {
 	assert.Equal(t, [2]uint64{4500, 9000}, result.Bandwidth)
 }
 
+func TestAverageSystemStatsSlice_ZfsMetrics(t *testing.T) {
+	input := []system.Stats{
+		{
+			ZfsPools: map[string]*system.ZfsPool{
+				"tank": {Total: 100, Used: 40, ReadBytes: 100, WriteBytes: 200, Health: "ONLINE"},
+			},
+			ZfsDatasets: map[string]*system.ZfsDataset{
+				"tank/data": {Total: 80, Used: 30},
+			},
+		},
+		{
+			ZfsPools: map[string]*system.ZfsPool{
+				"tank": {Total: 100, Used: 60, ReadBytes: 300, WriteBytes: 500, Health: "DEGRADED"},
+			},
+			ZfsDatasets: map[string]*system.ZfsDataset{
+				"tank/data": {Total: 80, Used: 50},
+			},
+		},
+	}
+
+	result := records.AverageSystemStatsSlice(input)
+
+	require.Contains(t, result.ZfsPools, "tank")
+	assert.Equal(t, &system.ZfsPool{
+		Total: 100, Used: 50, ReadBytes: 200, WriteBytes: 350, Health: "DEGRADED",
+	}, result.ZfsPools["tank"])
+	require.Contains(t, result.ZfsDatasets, "tank/data")
+	assert.Equal(t, &system.ZfsDataset{Total: 80, Used: 40}, result.ZfsDatasets["tank/data"])
+}
+
 // --- Container Stats Tests ---
 
 func TestAverageContainerStatsSlice_Empty(t *testing.T) {
