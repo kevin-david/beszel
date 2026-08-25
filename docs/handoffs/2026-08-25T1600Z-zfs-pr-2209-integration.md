@@ -23,10 +23,11 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Created kd/zfs-pr-2209-test from upstream main 4c48fe0c.
 - Ported the main ZFS feature commit ba12d8d5 onto current upstream, preserving both the newer manager shutdown context and the ZFS fetch cache.
 - Verified the tagged agent, alert, system-manager, and migration package tests pass.
+- Committed the main feature port as 590cf5f3.
 
 ## Next action
 
-Commit the main ZFS feature port, then apply the Alpine image and TypeScript follow-up commits.
+Commit the Alpine agent image dependency from PR #2209, then apply its TypeScript follow-up.
 
 ## Open decisions or blockers
 
