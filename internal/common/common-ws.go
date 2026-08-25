@@ -34,6 +34,11 @@ type HubRequest[T any] struct {
 	Id     *uint32         `cbor:"2,keyasint,omitempty"`
 }
 
+// ZfsDataRequest controls collection of detailed ZFS data.
+type ZfsDataRequest struct {
+	Force bool `cbor:"0,keyasint,omitempty"`
+}
+
 // AgentResponse defines the structure for responses sent from agent to hub.
 type AgentResponse struct {
 	Id          *uint32                    `cbor:"0,keyasint,omitempty"`

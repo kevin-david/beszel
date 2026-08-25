@@ -1,7 +1,7 @@
 # Resume — ZFS PR #2209 integration
 
 Created: 2026-08-25T1600Z
-Updated: 2026-08-25T1625Z
+Updated: 2026-08-25T1645Z
 Branch: kd/zfs-pr-2209-test
 
 ## Goal
@@ -40,10 +40,13 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Added initial unhealthy-pool alerts, safe N/A alert-history rendering, a 12-series chart cap with the remainder aggregated into Other, and exact child-process reaping.
 - Added a fork Alpine agent image tag so released users can opt into an image containing `zpool` and `zfs`.
 - Focused regression tests for all Go changes pass.
+- Production frontend and hub/Alpine-agent image builds pass; the Alpine image contains `zpool` and `zfs`.
+- Govulncheck reports the code is affected by zero vulnerabilities.
+- A fresh review found that explicit UI refreshes did not bypass the one-hour agent detail cache and that partial detail-command failures could erase fields. Explicit refresh now forces collection end to end, and partial failures propagate instead of being persisted as fresh data.
 
 ## Next action
 
-Run frontend and broad verification, commit the review fixes, obtain a fresh independent review, then deploy the candidate on virusdesk.
+Commit the final refresh-path fixes, complete fresh review, rebuild the final hub image, then deploy the candidate on virusdesk.
 
 ## Open decisions or blockers
 

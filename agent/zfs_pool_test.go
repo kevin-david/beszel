@@ -198,7 +198,7 @@ func TestGetDetailPropagatesCollectionFailure(t *testing.T) {
 		lastDetailRefresh: time.Now().Add(-time.Hour),
 		detailInterval:    time.Minute,
 	}
-	detail, err := zm.GetDetail()
+	detail, err := zm.GetDetail(false)
 	assert.Error(t, err)
 	assert.Nil(t, detail, "stale detail must not be returned as a fresh response")
 }
@@ -208,10 +208,35 @@ func TestGetDetailTreatsEmptyPoolInventoryAsAuthoritative(t *testing.T) {
 		poolStatsFn:    func() ([]zfs.PoolStat, error) { return nil, nil },
 		detailInterval: time.Minute,
 	}
-	detail, err := zm.GetDetail()
+	detail, err := zm.GetDetail(false)
 	require.NoError(t, err)
 	require.NotNil(t, detail)
 	assert.Empty(t, detail.Pools)
+}
+
+func TestGetDetailForceBypassesCache(t *testing.T) {
+	zm := &ZfsManager{
+		poolStatsFn:       func() ([]zfs.PoolStat, error) { return nil, errors.New("forced refresh") },
+		detail:            &zfsentity.ZfsData{Pools: []*zfsentity.PoolDetail{{Name: "cached"}}},
+		lastDetailRefresh: time.Now(),
+		detailInterval:    time.Hour,
+	}
+	detail, err := zm.GetDetail(true)
+	assert.Error(t, err)
+	assert.Nil(t, detail)
+}
+
+func TestGetDetailPropagatesPartialCollectionFailure(t *testing.T) {
+	zm := &ZfsManager{
+		poolStatsFn: func() ([]zfs.PoolStat, error) {
+			return []zfs.PoolStat{{Name: "tank", Health: "ONLINE"}}, nil
+		},
+		statusesFn: func() ([]zfs.PoolStatus, error) { return nil, nil },
+		datasetsFn: func() ([]zfs.Dataset, error) { return nil, errors.New("zfs list failed") },
+	}
+	detail, err := zm.GetDetail(true)
+	assert.Error(t, err)
+	assert.Nil(t, detail, "partial detail must not overwrite the persisted snapshot")
 }
 
 func TestZfsMountpoints(t *testing.T) {

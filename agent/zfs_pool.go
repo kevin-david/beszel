@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
@@ -41,8 +42,9 @@ type poolIoSource interface {
 // only; callers must hold the agent lock like updateDiskUsage does.
 type ZfsManager struct {
 	poolStatsFn func() ([]zfs.PoolStat, error) // capacity/health source
-	datasetsFn  func() ([]zfs.Dataset, error)  // dataset inventory source
-	watcherFn   func() (poolIoSource, error)   // streaming I/O rate source
+	statusesFn  func() ([]zfs.PoolStatus, error)
+	datasetsFn  func() ([]zfs.Dataset, error) // dataset inventory source
+	watcherFn   func() (poolIoSource, error)  // streaming I/O rate source
 
 	poolData      []zfs.PoolStat // cached pool inventory (TTL below)
 	lastPoolStats time.Time
@@ -67,6 +69,7 @@ type ZfsManager struct {
 func newZfsManager() *ZfsManager {
 	return &ZfsManager{
 		poolStatsFn:    zfs.PoolStats,
+		statusesFn:     zfs.PoolStatuses,
 		datasetsFn:     zfs.Datasets,
 		watcherFn:      func() (poolIoSource, error) { return zfs.NewPoolIoWatcher() },
 		detailInterval: time.Hour,
@@ -211,11 +214,11 @@ func (zm *ZfsManager) DatasetStats() map[string]zfsDatasetUsage {
 // GetDetail returns cached ZFS detail data (pool health, scrub, vdevs,
 // datasets), refreshing it when stale. Collection errors are propagated so a
 // cached snapshot is not persisted again with a fresh timestamp.
-func (zm *ZfsManager) GetDetail() (*zfsentity.ZfsData, error) {
+func (zm *ZfsManager) GetDetail(force bool) (*zfsentity.ZfsData, error) {
 	zm.detailMu.Lock()
 	defer zm.detailMu.Unlock()
 
-	if zm.detail == nil || time.Since(zm.lastDetailRefresh) >= zm.detailInterval {
+	if force || zm.detail == nil || time.Since(zm.lastDetailRefresh) >= zm.detailInterval {
 		if data, err := zm.collectDetail(); err != nil {
 			slog.Debug("ZFS detail collection failed", "err", err)
 			return nil, err
@@ -240,13 +243,13 @@ func (zm *ZfsManager) collectDetail() (*zfsentity.ZfsData, error) {
 		return &zfsentity.ZfsData{}, nil
 	}
 
-	statuses, err := zfs.PoolStatuses()
+	statuses, err := zm.statusesFn()
 	if err != nil {
-		slog.Debug("ZFS pool status unavailable", "err", err)
+		return nil, fmt.Errorf("ZFS pool status unavailable: %w", err)
 	}
 	datasets, err := zm.datasetsFn()
 	if err != nil {
-		slog.Debug("ZFS datasets unavailable", "err", err)
+		return nil, fmt.Errorf("ZFS datasets unavailable: %w", err)
 	}
 
 	statusByPool := make(map[string]zfs.PoolStatus, len(statuses))

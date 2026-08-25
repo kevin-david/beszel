@@ -676,11 +676,11 @@ func (sys *System) FetchSmartDataFromAgent() (smart.SmartDataResponse, error) {
 }
 
 // FetchZfsDataFromAgent fetches ZFS detail data from the agent
-func (sys *System) FetchZfsDataFromAgent() (*zfs.ZfsData, error) {
+func (sys *System) FetchZfsDataFromAgent(force bool) (*zfs.ZfsData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	var result zfs.ZfsData
-	err := sys.request(ctx, common.GetZfsData, nil, &result)
+	err := sys.request(ctx, common.GetZfsData, common.ZfsDataRequest{Force: force}, &result)
 	return &result, err
 }
 

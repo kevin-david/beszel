@@ -16,8 +16,9 @@ type zfsFetchState struct {
 }
 
 // FetchAndSaveZfsPools fetches ZFS detail data from the agent and saves it to the database
-func (sys *System) FetchAndSaveZfsPools() error {
-	zfsData, err := sys.FetchZfsDataFromAgent()
+func (sys *System) FetchAndSaveZfsPools(force ...bool) error {
+	forceCollection := len(force) > 0 && force[0]
+	zfsData, err := sys.FetchZfsDataFromAgent(forceCollection)
 	if err != nil {
 		sys.recordZfsFetchResult(err, 0)
 		return err
