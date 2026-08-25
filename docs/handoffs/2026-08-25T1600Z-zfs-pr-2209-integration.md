@@ -25,10 +25,11 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Verified the tagged agent, alert, system-manager, and migration package tests pass.
 - Committed the main feature port as 590cf5f3.
 - Added ZFS tooling to the Alpine agent image in 2f44ad86.
+- Applied the PR's TypeScript follow-up in ba011f56.
 
 ## Next action
 
-Commit the PR's TypeScript follow-up, then replay the three fork-specific commits.
+Commit the fork-specific release workflow adaptation, then replay reboot and filesystem-disappearance alerts.
 
 ## Open decisions or blockers
 
