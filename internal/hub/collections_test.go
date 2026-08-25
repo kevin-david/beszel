@@ -48,6 +48,7 @@ func TestCollectionRulesDefault(t *testing.T) {
 	alertNameField, ok := alertsCollection.Fields.GetByName("name").(*core.SelectField)
 	require.True(t, ok, "alerts.name should be a select field")
 	assert.Contains(t, alertNameField.Values, "Reboot")
+	assert.Contains(t, alertNameField.Values, "Filesystem")
 	assert.Equal(t, isUserMatchesUser, *alertsCollection.ListRule)
 	assert.Nil(t, alertsCollection.ViewRule)
 	assert.Equal(t, isUserMatchesUser, *alertsCollection.CreateRule)

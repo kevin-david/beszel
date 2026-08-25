@@ -433,6 +433,9 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, "/mnt/backup", stats.Mountpoint)
 		assert.Equal(t, "backup", stats.Name)
+		assert.True(t, stats.Expected)
+		assert.Equal(t, "sdb1", stats.Setting)
+		assert.True(t, stats.Available)
 	})
 
 	t.Run("falls back to usage-validated path", func(t *testing.T) {
@@ -457,6 +460,7 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, "/srv/archive", stats.Mountpoint)
 		assert.Equal(t, "archive", stats.Name)
+		assert.False(t, stats.Expected, "legacy directory paths should retain usage monitoring without mount alerts")
 	})
 
 	t.Run("ignores invalid filesystem entry", func(t *testing.T) {
@@ -472,6 +476,46 @@ func TestAddConfiguredExtraFsEntry(t *testing.T) {
 
 		assert.Empty(t, agent.fsStats)
 	})
+}
+
+func TestPruneDuplicateRootExtraFilesystemsKeepsExpectedMount(t *testing.T) {
+	path := t.TempDir()
+	agent := &Agent{fsStats: map[string]*system.FsStats{
+		"root": {Root: true, Mountpoint: "/"},
+		"usb":  {Mountpoint: path, Expected: true},
+	}}
+
+	agent.pruneDuplicateRootExtraFilesystems()
+
+	assert.Contains(t, agent.fsStats, "usb")
+}
+
+func TestHasExpectedFilesystems(t *testing.T) {
+	assert.False(t, hasExpectedFilesystems(map[string]*system.FsStats{"archive": {}}))
+	assert.True(t, hasExpectedFilesystems(map[string]*system.FsStats{"usb": {Expected: true}}))
+}
+
+func TestRefreshExpectedFilesystemAvailability(t *testing.T) {
+	stats := &system.FsStats{
+		Mountpoint: "/usb-hdd",
+		Setting:    "/usb-hdd",
+		Expected:   true,
+		Available:  true,
+		DiskTotal:  100,
+		DiskUsed:   90,
+	}
+
+	refreshExpectedFilesystemAvailability(map[string]*system.FsStats{"sdd": stats}, nil)
+	assert.False(t, stats.Available)
+	assert.Zero(t, stats.DiskTotal)
+	assert.Zero(t, stats.DiskUsed)
+
+	refreshExpectedFilesystemAvailability(map[string]*system.FsStats{"sdd": stats}, []disk.PartitionStat{{
+		Device:     "/dev/sdd",
+		Mountpoint: "/usb-hdd",
+	}})
+	assert.True(t, stats.Available)
+	assert.Equal(t, "/usb-hdd", stats.Mountpoint)
 }
 
 func TestAddConfiguredExtraFilesystems(t *testing.T) {

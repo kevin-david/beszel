@@ -1,7 +1,7 @@
 # Resume — ZFS PR #2209 integration
 
 Created: 2026-08-25T1600Z
-Updated: 2026-08-25T1602Z
+Updated: 2026-08-25T1606Z
 Branch: kd/zfs-pr-2209-test
 
 ## Goal
@@ -29,10 +29,12 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Preserved the fork release workflow in 5172c7f6.
 - Replayed reboot-alert behavior; its focused alert and hub tests pass.
 - Confirmed the broader WebSocket status timing failures reproduce unchanged on current upstream main, so they are baseline failures rather than an integration regression.
+- Integrated configured-filesystem disappearance tracking with ZFS dataset usage: availability refresh runs first, unavailable mounts are skipped, and available ZFS mounts use `zfs list` accounting.
+- Verified focused agent, ZFS, disk, alert, hub, and migration tests after the semantic merge.
 
 ## Next action
 
-Commit the reboot-alert replay, then integrate generic configured-filesystem disappearance alerts.
+Commit configured-filesystem disappearance alerts, then inspect the complete candidate and address integration defects.
 
 ## Open decisions or blockers
 
@@ -40,7 +42,7 @@ Commit the reboot-alert replay, then integrate generic configured-filesystem dis
 
 ## Last focused verification
 
-- `go test -tags='testing no_ui' ./internal/alerts ./internal/hub -run 'Reboot' -count=1` — passed.
+- `go test -tags='testing no_ui' ./agent/... ./internal/alerts/... ./internal/hub/systems/... ./internal/migrations/... ./internal/hub -run 'Reboot|Filesystem|Zfs|Disk' -count=1` — passed.
 
 ## Pointers
 
