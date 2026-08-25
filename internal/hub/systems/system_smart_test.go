@@ -29,6 +29,7 @@ func (stubHub) HandleSystemAlerts(systemRecord *core.Record, data *esystem.Combi
 	return nil
 }
 func (stubHub) HandleStatusAlerts(status string, systemRecord *core.Record) error { return nil }
+func (stubHub) HandleRebootAlert(systemRecord *core.Record) error                 { return nil }
 func (stubHub) CancelPendingStatusAlerts(systemID string)                         {}
 
 // newTestSystemWithHub creates a System backed by a real (temp) database, along

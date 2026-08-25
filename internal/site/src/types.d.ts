@@ -301,7 +301,7 @@ export interface AlertsHistoryRecord extends RecordModel {
 	user: string
 	system: string
 	name: string
-	val: number
+	value?: number
 	created: string
 	resolved?: string | null
 }
@@ -395,6 +395,8 @@ export interface AlertInfo {
 	/** Single value description (when there's only one value, like status) */
 	singleDesc?: () => string
 	invert?: boolean
+	/** No threshold or duration sliders for point-in-time event alerts. */
+	noSliders?: boolean
 }
 
 export type AlertMap = Record<string, Map<string, AlertRecord>>

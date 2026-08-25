@@ -26,10 +26,13 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Committed the main feature port as 590cf5f3.
 - Added ZFS tooling to the Alpine agent image in 2f44ad86.
 - Applied the PR's TypeScript follow-up in ba011f56.
+- Preserved the fork release workflow in 5172c7f6.
+- Replayed reboot-alert behavior; its focused alert and hub tests pass.
+- Confirmed the broader WebSocket status timing failures reproduce unchanged on current upstream main, so they are baseline failures rather than an integration regression.
 
 ## Next action
 
-Commit the fork-specific release workflow adaptation, then replay reboot and filesystem-disappearance alerts.
+Commit the reboot-alert replay, then integrate generic configured-filesystem disappearance alerts.
 
 ## Open decisions or blockers
 
@@ -37,7 +40,7 @@ Commit the fork-specific release workflow adaptation, then replay reboot and fil
 
 ## Last focused verification
 
-- `go test -tags='testing no_ui' ./agent/... ./internal/alerts/... ./internal/hub/systems/... ./internal/migrations/...` — passed.
+- `go test -tags='testing no_ui' ./internal/alerts ./internal/hub -run 'Reboot' -count=1` — passed.
 
 ## Pointers
 

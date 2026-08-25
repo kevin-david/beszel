@@ -131,6 +131,11 @@ func (s *System) StopUpdater() {
 }
 
 func (s *System) CreateRecords(data *entities.CombinedData) (*core.Record, error) {
+	record, _, err := s.CreateRecordsWithReboot(data)
+	return record, err
+}
+
+func (s *System) CreateRecordsWithReboot(data *entities.CombinedData) (*core.Record, bool, error) {
 	s.data = data
 	return s.createRecords(data)
 }

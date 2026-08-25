@@ -144,7 +144,12 @@ func (sys *System) update() error {
 	migrateDeprecatedFields(data, !sys.detailsFetched.Load())
 
 	// create system records
-	_, err = sys.createRecords(data)
+	systemRecord, rebooted, err := sys.createRecords(data)
+	if err == nil && rebooted {
+		if alertErr := sys.manager.hub.HandleRebootAlert(systemRecord); alertErr != nil {
+			sys.manager.hub.Logger().Error("Error handling reboot alert", "system", sys.Id, "err", alertErr)
+		}
+	}
 
 	// if details were included and fetched successfully, mark details as fetched and update smart interval if set by agent
 	if err == nil && data.Details != nil {
@@ -196,6 +201,44 @@ func (sys *System) update() error {
 	return err
 }
 
+const (
+	// rebootUptimeTolerance is the smallest uptime drop treated as a restart.
+	// It is twice the collection interval, which absorbs the wall-clock wobble
+	// on platforms where gopsutil derives uptime from the boot timestamp
+	// instead of a monotonic counter (darwin, the BSDs, solaris) without
+	// hiding any real restart: a host that has been up longer than a couple of
+	// minutes loses far more than this when it reboots.
+	rebootUptimeTolerance uint64 = 2 * uint64(interval/1000)
+
+	// maxPlausibleUptime rejects readings that cannot describe a real host. On
+	// the same boot-timestamp platforms a wall clock stepping back past boot
+	// underflows the unsigned subtraction into this range, and recovering from
+	// that must not look like a restart.
+	maxPlausibleUptime uint64 = 100 * 365 * 24 * 60 * 60
+)
+
+// rebootedFromUptime reports whether the host restarted between two
+// observations. A zero current reading means the agent could not read uptime,
+// or its platform does not support it, rather than a freshly booted host - the
+// agent cannot report before it is running. A zero previous reading needs no
+// special case: it can never exceed current by the tolerance, so a system's
+// first observation never alerts.
+//
+// Two restarts are deliberately not reported, both confined to a host observed
+// within its first couple of minutes of life. A restart is missed when uptime
+// drops by less than the tolerance (up 130s, restarted, next seen at 50s: a
+// drop of 80s), and when the reading after the restart is still higher than the
+// reading before it. Detecting either would mean trusting drops small enough to
+// be produced by a wall clock instead of a restart.
+func rebootedFromUptime(previous, current uint64) bool {
+	if current == 0 || current > maxPlausibleUptime || previous > maxPlausibleUptime {
+		return false
+	}
+	// Subtract only in the direction already known to be positive so the
+	// comparison cannot overflow on an absurd reading.
+	return previous > current && previous-current > rebootUptimeTolerance
+}
+
 func (sys *System) handlePaused() {
 	if sys.WsConn == nil {
 		// if the system is paused and there's no websocket connection, remove the system
@@ -210,13 +253,20 @@ func (sys *System) handlePaused() {
 }
 
 // createRecords updates the system record and adds system_stats and container_stats records
-func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error) {
-	systemRecord, err := sys.getRecord(sys.manager.hub)
-	if err != nil {
-		return nil, err
-	}
+func (sys *System) createRecords(data *system.CombinedData) (*core.Record, bool, error) {
 	hub := sys.manager.hub
-	err = hub.RunInTransaction(func(txApp core.App) error {
+	var systemRecord *core.Record
+	var rebooted bool
+	err := hub.RunInTransaction(func(txApp core.App) error {
+		var err error
+		systemRecord, err = sys.getRecord(txApp)
+		if err != nil {
+			return err
+		}
+		var previousInfo system.Info
+		_ = systemRecord.UnmarshalJSONField("info", &previousInfo)
+		rebooted = rebootedFromUptime(previousInfo.Uptime, data.Info.Uptime)
+
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")
 		if err != nil {
@@ -273,7 +323,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 		return nil
 	})
 
-	return systemRecord, err
+	return systemRecord, rebooted, err
 }
 
 func createSystemDetailsRecord(app core.App, data *system.Details, systemId string) error {
