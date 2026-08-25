@@ -1,7 +1,7 @@
 # Resume — ZFS PR #2209 integration
 
 Created: 2026-08-25T1600Z
-Updated: 2026-08-25T1645Z
+Updated: 2026-08-25T1700Z
 Branch: kd/zfs-pr-2209-test
 
 ## Goal
@@ -43,10 +43,11 @@ Port upstream Beszel PR #2209 onto current upstream, preserve the fork-specific 
 - Production frontend and hub/Alpine-agent image builds pass; the Alpine image contains `zpool` and `zfs`.
 - Govulncheck reports the code is affected by zero vulnerabilities.
 - A fresh review found that explicit UI refreshes did not bypass the one-hour agent detail cache and that partial detail-command failures could erase fields. Explicit refresh now forces collection end to end, and partial failures propagate instead of being persisted as fresh data.
+- The first live hub image exposed an upstream release-build defect: unpinned `golang:alpine` resolved to Go 1.27 and the resulting PocketBase binary stack-overflowed during collection migration. The hub was immediately rolled back with its database intact. The hub builder is now pinned to the repository's declared Go 1.26.6 version.
 
 ## Next action
 
-Commit the final refresh-path fixes, complete fresh review, rebuild the final hub image, then deploy the candidate on virusdesk.
+Prove the pinned hub image against a copied production database, re-review the pin, then retry the live hub deployment and verify ZFS values.
 
 ## Open decisions or blockers
 
