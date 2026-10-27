@@ -42,7 +42,7 @@ func TestZfsPoolAlertOnlineToDegraded(t *testing.T) {
 
 	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "should have 1 email sent after pool became DEGRADED")
 	lastMessage := hub.TestMailer.LastMessage()
-	assert.Contains(t, lastMessage.Subject, "ZFS pool DEGRADED on test-system")
+	assert.Contains(t, lastMessage.Subject, "Storage pool DEGRADED on test-system")
 	assert.Contains(t, lastMessage.Subject, "tank")
 	assert.Contains(t, lastMessage.Text, "ONLINE to DEGRADED")
 }
@@ -64,8 +64,6 @@ func TestZfsPoolAlertDegradedToFaulted(t *testing.T) {
 		"health": "DEGRADED",
 	})
 	assert.NoError(t, err)
-	time.Sleep(50 * time.Millisecond)
-	hub.TestMailer.Reset()
 
 	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
 	assert.NoError(t, err)
@@ -76,9 +74,9 @@ func TestZfsPoolAlertDegradedToFaulted(t *testing.T) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "should have 1 email sent after pool became FAULTED")
+	assert.EqualValues(t, 2, hub.TestMailer.TotalSend(), "should alert on initial DEGRADED state and later FAULTED transition")
 	lastMessage := hub.TestMailer.LastMessage()
-	assert.Contains(t, lastMessage.Subject, "ZFS pool FAULTED on test-system")
+	assert.Contains(t, lastMessage.Subject, "Storage pool FAULTED on test-system")
 }
 
 func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
@@ -98,8 +96,6 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 		"health": "DEGRADED",
 	})
 	assert.NoError(t, err)
-	time.Sleep(50 * time.Millisecond)
-	hub.TestMailer.Reset()
 
 	// Trigger a worsening alert first
 	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
@@ -108,7 +104,7 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 	err = hub.Save(pool)
 	assert.NoError(t, err)
 	time.Sleep(50 * time.Millisecond)
-	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "expected one alert for DEGRADED -> FAULTED")
+	assert.EqualValues(t, 2, hub.TestMailer.TotalSend(), "expected alerts for initial DEGRADED state and DEGRADED -> FAULTED")
 
 	// Recovery back to ONLINE must not send a new alert
 	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
@@ -117,7 +113,7 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 	err = hub.Save(pool)
 	assert.NoError(t, err)
 	time.Sleep(50 * time.Millisecond)
-	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "recovery should not send a new alert")
+	assert.EqualValues(t, 2, hub.TestMailer.TotalSend(), "recovery should not send a new alert")
 
 	// And the open history entry should have been resolved
 	history, err := hub.FindRecordsByFilter("alerts_history", "alert_id={:alert_id}", "", 0, 0, map[string]any{"alert_id": pool.Id})
@@ -125,7 +121,37 @@ func TestZfsPoolAlertNoAlertOnRecovery(t *testing.T) {
 	requireHistoryResolved(t, history)
 }
 
-func TestZfsPoolAlertOnInitialFaultedState(t *testing.T) {
+func TestZfsPoolAlertUnknownHealthDoesNotResolve(t *testing.T) {
+	hub, user := beszelTests.GetHubWithUser(t)
+	defer hub.Cleanup()
+
+	system, err := beszelTests.CreateRecord(hub, "systems", map[string]any{
+		"name":  "test-system",
+		"users": []string{user.Id},
+		"host":  "127.0.0.1",
+	})
+	require.NoError(t, err)
+
+	pool, err := beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
+		"system": system.Id,
+		"name":   "tank",
+		"health": "DEGRADED",
+	})
+	require.NoError(t, err)
+	time.Sleep(50 * time.Millisecond)
+
+	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
+	require.NoError(t, err)
+	pool.Set("health", "")
+	require.NoError(t, hub.Save(pool))
+	time.Sleep(50 * time.Millisecond)
+
+	history, err := hub.FindRecordsByFilter("alerts_history", "alert_id={:alert_id} && resolved=null", "", 0, 0, map[string]any{"alert_id": pool.Id})
+	require.NoError(t, err)
+	require.Len(t, history, 1, "unknown health must not resolve an active alert")
+}
+
+func TestZfsPoolAlertUnknownToFaulted(t *testing.T) {
 	hub, user := beszelTests.GetHubWithUser(t)
 	defer hub.Cleanup()
 
@@ -136,31 +162,52 @@ func TestZfsPoolAlertOnInitialFaultedState(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	_, err = beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
+	pool, err := beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
 		"system": system.Id,
 		"name":   "tank",
-		"health": "FAULTED",
+		"health": "",
 	})
+	assert.NoError(t, err)
+
+	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
+	assert.NoError(t, err)
+
+	pool.Set("health", "FAULTED")
+	err = hub.Save(pool)
 	assert.NoError(t, err)
 
 	time.Sleep(50 * time.Millisecond)
 
-	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "initially unhealthy pool should alert")
+	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "should alert when a previously unknown pool becomes FAULTED")
 }
 
-func TestZfsPoolAlertNoAlertOnInitialOnlineState(t *testing.T) {
+func TestZfsPoolAlertOnInitialUnhealthyState(t *testing.T) {
 	hub, user := beszelTests.GetHubWithUser(t)
 	defer hub.Cleanup()
+
 	system, err := beszelTests.CreateRecord(hub, "systems", map[string]any{
-		"name": "test-system", "users": []string{user.Id}, "host": "127.0.0.1",
+		"name":  "test-system",
+		"users": []string{user.Id},
+		"host":  "127.0.0.1",
 	})
 	require.NoError(t, err)
-	_, err = beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
-		"system": system.Id, "name": "tank", "health": "ONLINE",
+
+	pool, err := beszelTests.CreateRecord(hub, "zfs_pools", map[string]any{
+		"system": system.Id,
+		"name":   "tank",
+		"health": "DEGRADED",
 	})
 	require.NoError(t, err)
 	time.Sleep(50 * time.Millisecond)
-	assert.Zero(t, hub.TestMailer.TotalSend())
+
+	require.EqualValues(t, 1, hub.TestMailer.TotalSend())
+	assert.Contains(t, hub.TestMailer.LastMessage().Text, "first observed as DEGRADED")
+
+	pool, err = hub.FindRecordById("zfs_pools", pool.Id)
+	require.NoError(t, err)
+	require.NoError(t, hub.Save(pool))
+	time.Sleep(50 * time.Millisecond)
+	assert.EqualValues(t, 1, hub.TestMailer.TotalSend(), "unchanged unhealthy health must not duplicate alerts")
 }
 
 func TestZfsPoolAlertWritesHistory(t *testing.T) {
@@ -192,7 +239,7 @@ func TestZfsPoolAlertWritesHistory(t *testing.T) {
 	history, err := hub.FindRecordsByFilter("alerts_history", "alert_id={:alert_id}", "", 0, 0, map[string]any{"alert_id": pool.Id})
 	assert.NoError(t, err)
 	require.Len(t, history, 1, "expected one history entry per user")
-	assert.Equal(t, "ZFS Pool: tank", history[0].GetString("name"))
+	assert.Equal(t, "Storage Pool: tank", history[0].GetString("name"))
 	assert.Equal(t, system.Id, history[0].GetString("system"))
 }
 

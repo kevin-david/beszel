@@ -3,28 +3,41 @@ package systems
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/henrygd/beszel"
+	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 )
+
+var errIncompleteZfsData = errors.New("incomplete ZFS pool inventory")
 
 type zfsFetchState struct {
 	LastAttempt int64
 	Successful  bool
 }
 
-// FetchAndSaveZfsPools fetches ZFS detail data from the agent and saves it to the database
-func (sys *System) FetchAndSaveZfsPools(force ...bool) error {
-	forceCollection := len(force) > 0 && force[0]
-	zfsData, err := sys.FetchZfsDataFromAgent(forceCollection)
+func (sys *System) supportsZfsData() bool {
+	return sys.getAgentVersion().GTE(beszel.MinVersionZfsData)
+}
+
+// FetchAndSaveZfsPools fetches ZFS detail data from the agent and saves it to
+// the database. force bypasses the agent's detail cache for manual refreshes.
+func (sys *System) FetchAndSaveZfsPools(force bool) error {
+	zfsData, err := sys.FetchZfsDataFromAgent(force)
 	if err != nil {
 		sys.recordZfsFetchResult(err, 0)
 		return err
 	}
 	err = sys.saveZfsPools(zfsData)
-	sys.recordZfsFetchResult(err, len(zfsData.Pools))
+	poolCount := 0
+	if zfsData != nil {
+		poolCount = len(zfsData.Pools)
+	}
+	sys.recordZfsFetchResult(err, poolCount)
 	return err
 }
 
@@ -63,55 +76,62 @@ func (sys *System) zfsFetchInterval() time.Duration {
 }
 
 // saveZfsPools saves ZFS pool detail data to the zfs_pools collection and
-// removes records for pools no longer reported by the agent. Collection
-// failures do not reach this function; an empty successful payload is
-// authoritative and removes pools that disappeared.
+// removes records for pools no longer reported by a complete agent inventory.
 func (sys *System) saveZfsPools(zfsData *zfs.ZfsData) error {
-	if zfsData == nil {
-		return nil
+	if zfsData == nil || (!zfsData.CanRefreshPool("zfs") && !zfsData.CanRefreshPool("b:")) {
+		return errIncompleteZfsData
 	}
 
-	collection, err := sys.manager.hub.FindCachedCollectionByNameOrId("zfs_pools")
+	hub := sys.manager.hub
+	collection, err := hub.FindCachedCollectionByNameOrId("zfs_pools")
 	if err != nil {
 		return err
 	}
 
-	alive := make(map[string]bool, len(zfsData.Pools))
-	for _, pool := range zfsData.Pools {
-		if pool == nil {
-			continue
-		}
-		alive[pool.Name] = true
-		if err := sys.upsertZfsPoolRecord(collection, pool); err != nil {
-			return err
-		}
-	}
-
-	existing, err := sys.manager.hub.FindRecordsByFilter(
-		"zfs_pools",
-		"system={:system}",
-		"", 0, 0,
-		dbx.Params{"system": sys.Id},
-	)
-	if err != nil {
-		return err
-	}
-	for _, record := range existing {
-		if !alive[record.GetString("name")] {
-			if err := sys.manager.hub.Delete(record); err != nil {
+	err = hub.RunInTransaction(func(txApp core.App) error {
+		alive := make(map[string]bool, len(zfsData.Pools))
+		for _, pool := range zfsData.Pools {
+			if pool == nil || !zfsData.CanRefreshPool(pool.Name) {
+				continue
+			}
+			alive[pool.Name] = true
+			if err := sys.upsertZfsPoolRecord(txApp, collection, pool); err != nil {
 				return err
 			}
 		}
-	}
 
+		existing, err := txApp.FindRecordsByFilter(
+			collection,
+			"system={:system}",
+			"", 0, 0,
+			dbx.Params{"system": sys.Id},
+		)
+		if err != nil {
+			return err
+		}
+		for _, record := range existing {
+			if name := record.GetString("name"); zfsData.CanRefreshPool(name) && !alive[name] {
+				if err := txApp.Delete(record); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	// Report partial failure only after committing healthy backend updates.
+	if !zfsData.Complete {
+		return errIncompleteZfsData
+	}
 	return nil
 }
 
-func (sys *System) upsertZfsPoolRecord(collection *core.Collection, pool *zfs.PoolDetail) error {
-	hub := sys.manager.hub
-	recordID := makeStableHashId(sys.Id, pool.Name)
+func (sys *System) upsertZfsPoolRecord(app core.App, collection *core.Collection, pool *zfs.PoolDetail) error {
+	recordID := MakeStableHashId(sys.Id, pool.Name)
 
-	record, err := hub.FindRecordById(collection, recordID)
+	record, err := app.FindRecordById(collection, recordID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return err
@@ -122,13 +142,69 @@ func (sys *System) upsertZfsPoolRecord(collection *core.Collection, pool *zfs.Po
 
 	record.Set("system", sys.Id)
 	record.Set("name", pool.Name)
+	record.Set("display_name", pool.DisplayName)
 	record.Set("health", pool.Health)
+	record.Set("status", pool.Status)
 	record.Set("size", pool.Size)
 	record.Set("alloc", pool.Alloc)
 	record.Set("free", pool.Free)
+	record.Set("raw", pool.Raw)
 	record.Set("scrub", pool.Scrub)
 	record.Set("vdevs", pool.Vdevs)
 	record.Set("datasets", pool.Datasets)
+	record.Set("details_updated", time.Now().UTC())
 
-	return hub.SaveNoValidate(record)
+	return app.SaveNoValidate(record)
+}
+
+// syncZfsPoolHealth persists newly discovered pools and health transitions from
+// regular system samples. Detailed fields remain owned by the hourly refresh.
+func (sys *System) syncZfsPoolHealth(app core.App, pools map[string]*system.ZfsPool) error {
+	if len(pools) == 0 {
+		return nil
+	}
+	collection, err := app.FindCachedCollectionByNameOrId("zfs_pools")
+	if err != nil {
+		return err
+	}
+	const gib = 1024 * 1024 * 1024
+	for name, pool := range pools {
+		if pool == nil {
+			continue
+		}
+		recordID := MakeStableHashId(sys.Id, name)
+		record, err := app.FindRecordById(collection, recordID)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return err
+			}
+			record = core.NewRecord(collection)
+			record.Set("id", recordID)
+			record.Set("system", sys.Id)
+			record.Set("name", name)
+			record.Set("display_name", pool.DisplayName)
+			record.Set("health", pool.Health)
+			record.Set("raw", pool.Raw)
+			record.Set("size", uint64(pool.Total*gib))
+			record.Set("alloc", uint64(pool.Used*gib))
+			record.Set("free", uint64(max(pool.Total-pool.Used, 0)*gib))
+			if err := app.SaveNoValidate(record); err != nil {
+				return fmt.Errorf("creating ZFS pool summary %q: %w", name, err)
+			}
+			continue
+		}
+		if record.GetString("health") == pool.Health && record.GetBool("raw") == pool.Raw && record.GetString("display_name") == pool.DisplayName {
+			continue
+		}
+		record.Set("display_name", pool.DisplayName)
+		record.Set("health", pool.Health)
+		record.Set("raw", pool.Raw)
+		record.Set("size", uint64(pool.Total*gib))
+		record.Set("alloc", uint64(pool.Used*gib))
+		record.Set("free", uint64(max(pool.Total-pool.Used, 0)*gib))
+		if err := app.SaveNoValidate(record); err != nil {
+			return fmt.Errorf("updating ZFS pool health %q: %w", name, err)
+		}
+	}
+	return nil
 }

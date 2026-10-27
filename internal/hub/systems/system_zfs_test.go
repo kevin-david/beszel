@@ -7,27 +7,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blang/semver"
+	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/henrygd/beszel/internal/hub/expirymap"
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSaveZfsPoolsEmptyPayloadPrunesRemovedPools(t *testing.T) {
-	sys, app := newTestSystemWithHub(t)
-	collection, err := app.FindCachedCollectionByNameOrId("zfs_pools")
-	require.NoError(t, err)
-	record := core.NewRecord(collection)
-	record.Set("system", sys.Id)
-	record.Set("name", "removed-pool")
-	require.NoError(t, app.SaveNoValidate(record))
+func TestSupportsZfsData(t *testing.T) {
+	sys := &System{}
+	sys.setAgentVersion(semver.MustParse("0.18.8"))
+	assert.False(t, sys.supportsZfsData())
 
-	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{}))
-	remaining, err := app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, dbx.Params{"system": sys.Id})
-	require.NoError(t, err)
-	assert.Empty(t, remaining)
+	sys.setAgentVersion(semver.MustParse("0.18.9"))
+	assert.True(t, sys.supportsZfsData())
 }
 
 func TestRecordZfsFetchResult(t *testing.T) {
@@ -99,4 +93,140 @@ func TestResetFailedZfsFetchState(t *testing.T) {
 	sm.resetFailedZfsFetchState("system-1")
 	_, ok = sm.zfsFetchMap.GetOk("system-1")
 	assert.True(t, ok, "expected successful zfs fetch state to be preserved")
+}
+
+func TestSaveZfsPoolsCompleteEmptyPrunesFinalPool(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{
+		Complete: true,
+		Pools:    []*zfs.PoolDetail{{Name: "tank", Health: "ONLINE", Status: "One or more devices has experienced an unrecoverable error."}},
+	}))
+	records, err := app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, map[string]any{"system": sys.Id})
+	require.NoError(t, err)
+	require.Len(t, records, 1)
+	assert.Equal(t, "One or more devices has experienced an unrecoverable error.", records[0].GetString("status"))
+	assert.False(t, records[0].GetDateTime("details_updated").Time().IsZero())
+
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{Complete: true}))
+	records, err = app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, map[string]any{"system": sys.Id})
+	require.NoError(t, err)
+	assert.Empty(t, records)
+}
+
+func TestSaveZfsPoolsIncompletePreservesRecords(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{
+		Complete: true,
+		Pools:    []*zfs.PoolDetail{{Name: "tank", Health: "ONLINE"}},
+	}))
+	assert.ErrorIs(t, sys.saveZfsPools(&zfs.ZfsData{}), errIncompleteZfsData)
+	records, err := app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, map[string]any{"system": sys.Id})
+	require.NoError(t, err)
+	assert.Len(t, records, 1)
+}
+
+func TestSavePartialBackendInventory(t *testing.T) {
+	for _, healthy := range []string{"zfs", "btrfs"} {
+		t.Run(healthy, func(t *testing.T) {
+			sys, app := newTestSystemWithHub(t)
+			healthyKey, failedKey := "tank", "b:uuid"
+			if healthy == "btrfs" {
+				healthyKey, failedKey = failedKey, healthyKey
+			}
+			initial := &zfs.ZfsData{Complete: true, Pools: []*zfs.PoolDetail{
+				{Name: healthyKey, Alloc: 10}, {Name: failedKey, Alloc: 10},
+			}}
+			require.NoError(t, sys.saveZfsPools(initial))
+			failedID := MakeStableHashId(sys.Id, failedKey)
+			before, err := app.FindRecordById("zfs_pools", failedID)
+			require.NoError(t, err)
+			partial := &zfs.ZfsData{CompleteBackends: []string{healthy}, Pools: []*zfs.PoolDetail{
+				{Name: healthyKey, Alloc: 20}, {Name: failedKey, Alloc: 99},
+			}}
+			assert.ErrorIs(t, sys.saveZfsPools(partial), errIncompleteZfsData)
+			fresh, err := app.FindRecordById("zfs_pools", MakeStableHashId(sys.Id, healthyKey))
+			require.NoError(t, err)
+			assert.EqualValues(t, 20, fresh.GetInt("alloc"))
+			cached, err := app.FindRecordById("zfs_pools", failedID)
+			require.NoError(t, err)
+			assert.EqualValues(t, 10, cached.GetInt("alloc"))
+			assert.Equal(t, before.GetDateTime("details_updated"), cached.GetDateTime("details_updated"))
+			// An empty successful backend can prune, even while the other fails.
+			partial.Pools = nil
+			assert.ErrorIs(t, sys.saveZfsPools(partial), errIncompleteZfsData)
+			records, err := app.FindRecordsByFilter("zfs_pools", "system={:system}", "", 0, 0, map[string]any{"system": sys.Id})
+			require.NoError(t, err)
+			require.Len(t, records, 1)
+			assert.Equal(t, failedKey, records[0].GetString("name"))
+			require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{Complete: true}))
+		})
+	}
+}
+
+func TestSyncZfsPoolHealthWritesOnlyTransitions(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	collection, err := app.FindCachedCollectionByNameOrId("zfs_pools")
+	require.NoError(t, err)
+
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{
+		"tank": {Total: 100, Used: 25, Health: "ONLINE"},
+	}))
+	record, err := app.FindRecordById(collection, MakeStableHashId(sys.Id, "tank"))
+	require.NoError(t, err)
+	firstUpdated := record.GetDateTime("updated")
+	assert.Equal(t, "ONLINE", record.GetString("health"))
+	assert.EqualValues(t, 100*1024*1024*1024, record.GetInt("size"))
+
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{
+		"tank": {Total: 100, Used: 30, Health: "ONLINE"},
+	}))
+	record, err = app.FindRecordById(collection, record.Id)
+	require.NoError(t, err)
+	assert.Equal(t, firstUpdated, record.GetDateTime("updated"))
+
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{
+		"tank": {Total: 100, Used: 30, Health: "DEGRADED"},
+	}))
+	record, err = app.FindRecordById(collection, record.Id)
+	require.NoError(t, err)
+	assert.Equal(t, "DEGRADED", record.GetString("health"))
+}
+
+func TestZfsRawCapacityPersistence(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{Complete: true, Pools: []*zfs.PoolDetail{{Name: "btrfs", Size: 200, Alloc: 10, Raw: true}}}))
+	record, err := app.FindRecordById("zfs_pools", MakeStableHashId(sys.Id, "btrfs"))
+	require.NoError(t, err)
+	require.True(t, record.GetBool("raw"))
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{"btrfs": {Total: 1, Used: 0.25}}))
+	record, err = app.FindRecordById("zfs_pools", record.Id)
+	require.NoError(t, err)
+	assert.False(t, record.GetBool("raw"))
+	assert.EqualValues(t, 1024*1024*1024, record.GetInt("size"))
+}
+
+func TestBtrfsDisplayNameKeepsRecordIdentity(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	key := "b:11111111-1111-4111-8111-111111111111"
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{
+		key:    {DisplayName: "tank", Health: "ONLINE"},
+		"tank": {Health: "ONLINE"},
+	}))
+	id := MakeStableHashId(sys.Id, key)
+	record, err := app.FindRecordById("zfs_pools", id)
+	require.NoError(t, err)
+	assert.Equal(t, "tank", record.GetString("display_name"))
+	require.NoError(t, sys.syncZfsPoolHealth(app, map[string]*system.ZfsPool{key: {DisplayName: "renamed", Health: "ONLINE"}}))
+	record, err = app.FindRecordById("zfs_pools", id)
+	require.NoError(t, err)
+	assert.Equal(t, key, record.GetString("name"))
+	assert.Equal(t, "renamed", record.GetString("display_name"))
+	require.NoError(t, sys.saveZfsPools(&zfs.ZfsData{Complete: true, Pools: []*zfs.PoolDetail{
+		{Name: key, DisplayName: "detail name", Health: "ONLINE"}, {Name: "tank", Health: "ONLINE"},
+	}}))
+	record, err = app.FindRecordById("zfs_pools", id)
+	require.NoError(t, err)
+	assert.Equal(t, "detail name", record.GetString("display_name"))
+	_, err = app.FindRecordById("zfs_pools", MakeStableHashId(sys.Id, "tank"))
+	require.NoError(t, err)
 }

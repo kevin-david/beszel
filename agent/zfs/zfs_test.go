@@ -3,11 +3,12 @@
 package zfs
 
 import (
+	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,6 +37,12 @@ func TestParseZpoolListOutputIgnoresEmptyLines(t *testing.T) {
 	assert.Equal(t, "tank", pools[0].Name)
 }
 
+func TestParseZpoolListOutputNoPools(t *testing.T) {
+	pools, err := parseZpoolListOutput([]byte("no pools available\n"))
+	require.NoError(t, err)
+	assert.Empty(t, pools)
+}
+
 func TestParseZpoolListOutputRejectsMalformedLine(t *testing.T) {
 	_, err := parseZpoolListOutput([]byte("tank\t100\t50\n"))
 	require.Error(t, err)
@@ -60,44 +67,18 @@ func TestParseZfsListOutput(t *testing.T) {
 	assert.Equal(t, uint64(11999000000000), datasets[0].Avail)
 }
 
-func TestPoolIoWatcherHandleLine(t *testing.T) {
-	data, err := os.ReadFile(fixturePath("zpool_iostat.txt"))
-	require.NoError(t, err)
-
-	w := &PoolIoWatcher{latest: make(map[string]PoolIoStats)}
-	for _, line := range strings.Split(string(data), "\n") {
-		w.handleLine(line)
-	}
-
-	latest, ok := w.Latest()
-	require.True(t, ok)
-	require.Len(t, latest, 2)
-	// The last sample block wins over the since-boot averages.
-	assert.Equal(t, uint64(0), latest["rpool"].NRead)
-	assert.Equal(t, uint64(0), latest["rpool"].NWrite)
-	assert.Equal(t, uint64(1250), latest["tank"].NRead)
-	assert.Equal(t, uint64(5120), latest["tank"].NWrite)
-}
-
-func TestPoolIoWatcherIgnoresHeaders(t *testing.T) {
-	w := &PoolIoWatcher{latest: make(map[string]PoolIoStats)}
-	w.handleLine("pool                  alloc             free             read            write             read            write")
-	w.handleLine("----------  ---------------  ---------------  ---------------  ---------------  ---------------  ---------------")
-	_, ok := w.Latest()
-	assert.False(t, ok, "no pool rows should yield no sample")
-}
-
-func TestPoolIoWatcherReapsProcess(t *testing.T) {
-	cmd := exec.Command("sh", "-c", "printf 'tank 1 1 0 0 1 2\\n'")
-	stdout, err := cmd.StdoutPipe()
-	require.NoError(t, err)
-	require.NoError(t, cmd.Start())
-	w := &PoolIoWatcher{cmd: cmd, latest: make(map[string]PoolIoStats), stopped: true}
-
-	w.readLoop(cmd, stdout)
-
-	require.NotNil(t, cmd.ProcessState, "read loop must call Wait and reap its child")
-	assert.True(t, cmd.ProcessState.Exited())
+func TestParseRootDatasetOutput(t *testing.T) {
+	roots := parseRootDatasetOutput([]byte(
+		"tank\t40\t60\t0\n" +
+			"backup\t5\t15\tnone\n" +
+			"quota\t40\t10\t20\n" +
+			"broken\tnotanumber\t60\t0\n" +
+			"short\t40\t60\n",
+	))
+	assert.Equal(t, map[string]Dataset{
+		"tank":   {Name: "tank", Used: 40, Avail: 60},
+		"backup": {Name: "backup", Used: 5, Avail: 15},
+	}, roots)
 }
 
 func TestParseZpoolStatusOutput(t *testing.T) {
@@ -106,11 +87,12 @@ func TestParseZpoolStatusOutput(t *testing.T) {
 
 	pools, err := parseZpoolStatusOutput(data)
 	require.NoError(t, err)
-	require.Len(t, pools, 2)
+	require.Len(t, pools, 3)
 
 	tank := pools[0]
 	assert.Equal(t, "tank", tank.Name)
 	assert.Equal(t, "ONLINE", tank.State)
+	assert.Empty(t, tank.Status)
 	assert.Equal(t, "FINISHED", tank.Scrub.State)
 	assert.Equal(t, "", tank.Scrub.Progress)
 	assert.Equal(t, uint64(0), tank.Scrub.Errors)
@@ -123,6 +105,7 @@ func TestParseZpoolStatusOutput(t *testing.T) {
 	rpool := pools[1]
 	assert.Equal(t, "rpool", rpool.Name)
 	assert.Equal(t, "DEGRADED", rpool.State)
+	assert.Equal(t, "One or more devices could not be used because the label is missing or invalid. Sufficient replicas exist for the pool to continue functioning in a degraded state.", rpool.Status)
 	assert.Equal(t, "SCANNING", rpool.Scrub.State)
 	assert.Equal(t, "10.00%", rpool.Scrub.Progress)
 	require.Len(t, rpool.Vdevs, 3)
@@ -130,6 +113,17 @@ func TestParseZpoolStatusOutput(t *testing.T) {
 	assert.Equal(t, uint64(1), rpool.Vdevs[2].ReadErrs)
 	assert.Equal(t, uint64(2), rpool.Vdevs[2].WriteErrs)
 	assert.Equal(t, uint64(3), rpool.Vdevs[2].ChecksumErrs)
+
+	// state: ONLINE with a status: message (ZFS-8000-9P) - issue #2490.
+	// The status text stops at action:/see: and the pool stays ONLINE.
+	pve := pools[2]
+	assert.Equal(t, "pve1storage", pve.Name)
+	assert.Equal(t, "ONLINE", pve.State)
+	assert.Equal(t, "One or more devices has experienced an unrecoverable error. An attempt was made to correct the error. Applications are unaffected.", pve.Status)
+	assert.Equal(t, "FINISHED", pve.Scrub.State)
+	require.Len(t, pve.Vdevs, 3)
+	assert.Equal(t, "raidz2-0", pve.Vdevs[0].Name)
+	assert.Equal(t, uint64(1), pve.Vdevs[2].ChecksumErrs)
 }
 
 func TestParseScanLine(t *testing.T) {
@@ -139,4 +133,38 @@ func TestParseScanLine(t *testing.T) {
 	assert.Equal(t, "CANCELED", parseScanLine("scan: scrub canceled on Sun Jun  1 02:00:12 2025").State)
 	assert.Equal(t, "FINISHED", parseScanLine("scan: resilvered 1.23G in 00:01:00 with 0 errors on Sun Jun  1 02:00:12 2025").State)
 	assert.Equal(t, "NONE", parseScanLine("scan: none requested").State)
+}
+
+func TestCommandOutputForcesLocaleAndTimesOut(t *testing.T) {
+	t.Setenv("BESZEL_ZFS_COMMAND_HELPER", "1")
+	out, err := commandOutput(os.Args[0], "-test.run=TestZfsCommandHelperProcess", "--", "locale")
+	require.NoError(t, err)
+	assert.Equal(t, "C/C", string(out))
+
+	oldTimeout := commandTimeout
+	commandTimeout = 20 * time.Millisecond
+	t.Cleanup(func() { commandTimeout = oldTimeout })
+	_, err = commandOutput(os.Args[0], "-test.run=TestZfsCommandHelperProcess", "--", "sleep")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "timed out")
+}
+
+func TestZfsCommandHelperProcess(t *testing.T) {
+	if os.Getenv("BESZEL_ZFS_COMMAND_HELPER") != "1" {
+		return
+	}
+	mode := ""
+	for i, arg := range os.Args {
+		if arg == "--" && i+1 < len(os.Args) {
+			mode = os.Args[i+1]
+			break
+		}
+	}
+	switch strings.TrimSpace(mode) {
+	case "locale":
+		_, _ = fmt.Printf("%s/%s", os.Getenv("LC_ALL"), os.Getenv("LANG"))
+	case "sleep":
+		time.Sleep(time.Second)
+	}
+	os.Exit(0)
 }

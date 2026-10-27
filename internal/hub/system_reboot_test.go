@@ -7,6 +7,8 @@ import (
 
 	"github.com/henrygd/beszel/internal/entities/system"
 	beszelTests "github.com/henrygd/beszel/internal/tests"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,15 +22,26 @@ func TestSystemRecordsDetectRebootFromUptime(t *testing.T) {
 	monitoredSystem, err := hub.GetSystemManager().GetSystemFromStore(systemRecords[0].Id)
 	require.NoError(t, err)
 	monitoredSystem.StopUpdater()
+	alertCollection, err := hub.FindCollectionByNameOrId("alerts")
+	require.NoError(t, err)
+	alert := core.NewRecord(alertCollection)
+	alert.Set("system", systemRecords[0].Id)
+	alert.Set("user", user.Id)
+	alert.Set("name", "Reboot")
+	require.NoError(t, hub.Save(alert))
 
 	reportUptime := func(uptime uint64) (*system.Info, bool) {
-		record, rebooted, err := monitoredSystem.CreateRecordsWithReboot(&system.CombinedData{
+		before, err := hub.CountRecords("alerts_history", dbx.HashExp{"name": "Reboot"})
+		require.NoError(t, err)
+		record, err := monitoredSystem.CreateRecords(&system.CombinedData{
 			Info: system.Info{Uptime: uptime},
 		})
 		require.NoError(t, err)
+		after, err := hub.CountRecords("alerts_history", dbx.HashExp{"name": "Reboot"})
+		require.NoError(t, err)
 		var stored system.Info
 		require.NoError(t, record.UnmarshalJSONField("info", &stored))
-		return &stored, rebooted
+		return &stored, after > before
 	}
 
 	stored, rebooted := reportUptime(86400)

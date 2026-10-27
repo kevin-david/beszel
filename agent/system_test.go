@@ -1,11 +1,13 @@
 package agent
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/henrygd/beszel/internal/common"
 	"github.com/henrygd/beszel/internal/entities/system"
+	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,14 +49,14 @@ func TestCalculateHostMemoryUsage(t *testing.T) {
 			memory:    mem.VirtualMemoryStat{Total: 100, Available: 40, Used: 60, Free: 20, Cached: 25, Buffers: 10, Shared: 5, SwapTotal: 20, SwapFree: 8, SwapCached: 2},
 			used:      60,
 			cacheBuff: 30,
-			swapUsed:  10,
+			swapUsed:  12,
 		},
 		{
 			name:      "inconsistent counters saturate",
 			memory:    mem.VirtualMemoryStat{Total: 100, Available: 110, Used: ^uint64(0) - 9, Free: 90, Cached: 5, Buffers: 10, Shared: 20, SwapTotal: 10, SwapFree: 9, SwapCached: 2},
 			used:      0,
 			cacheBuff: 0,
-			swapUsed:  0,
+			swapUsed:  1,
 		},
 		{
 			name:      "htop subtraction saturates",
@@ -62,7 +64,7 @@ func TestCalculateHostMemoryUsage(t *testing.T) {
 			htop:      true,
 			used:      0,
 			cacheBuff: 25,
-			swapUsed:  15,
+			swapUsed:  20,
 		},
 		{
 			name:      "zero cache from shared cancellation does not fall back",
@@ -190,5 +192,20 @@ BogoMIPS                : 300.00`,
 			result := parseCpuModel(strings.NewReader(tt.input))
 			assert.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+func TestCpuSockets(t *testing.T) {
+	// two packages with several logical CPUs each, as gopsutil reports on x86 Linux
+	dual := []cpu.InfoStat{{PhysicalID: "0"}, {PhysicalID: "0"}, {PhysicalID: "1"}, {PhysicalID: "1"}}
+	got := cpuSockets(dual)
+	switch {
+	case runtime.GOOS == "windows":
+		assert.Equal(t, 4, got)
+	case runtime.GOOS == "linux" && (runtime.GOARCH == "amd64" || runtime.GOARCH == "386"):
+		assert.Equal(t, 2, got)
+		assert.Equal(t, 0, cpuSockets([]cpu.InfoStat{{}, {}}), "empty PhysicalID is unknown")
+	default:
+		assert.Equal(t, 0, got)
 	}
 }

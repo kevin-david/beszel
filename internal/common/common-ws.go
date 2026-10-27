@@ -24,6 +24,12 @@ const (
 	GetSystemdInfo
 	// Request ZFS detail data from agent
 	GetZfsData
+	// Sync network monitor configuration to agent
+	SyncNetworkMonitors
+	// Request the list of pending package updates from agent
+	GetPackageUpdates
+	// Request recent logs for a systemd service from the agent.
+	GetSystemdLogs
 	// Add new actions here...
 )
 
@@ -34,11 +40,6 @@ type HubRequest[T any] struct {
 	Id     *uint32         `cbor:"2,keyasint,omitempty"`
 }
 
-// ZfsDataRequest controls collection of detailed ZFS data.
-type ZfsDataRequest struct {
-	Force bool `cbor:"0,keyasint,omitempty"`
-}
-
 // AgentResponse defines the structure for responses sent from agent to hub.
 type AgentResponse struct {
 	Id          *uint32                    `cbor:"0,keyasint,omitempty"`
@@ -46,7 +47,7 @@ type AgentResponse struct {
 	Fingerprint *FingerprintResponse       `cbor:"2,keyasint,omitempty,omitzero"` // Legacy (<= 0.17)
 	Error       string                     `cbor:"3,keyasint,omitempty,omitzero"`
 	String      *string                    `cbor:"4,keyasint,omitempty,omitzero"` // Legacy (<= 0.17)
-	SmartData   map[string]smart.SmartData `cbor:"5,keyasint,omitempty,omitzero"` // Legacy (<= 0.17)
+	SmartData   map[string]smart.SmartData `cbor:"5,keyasint,omitzero"`           // Legacy (<= 0.17)
 	ServiceInfo systemd.ServiceDetails     `cbor:"6,keyasint,omitempty,omitzero"` // Legacy (<= 0.17)
 	// Data is the generic response payload for new endpoints (0.18+)
 	Data          cbor.RawMessage `cbor:"7,keyasint,omitempty,omitzero"`
@@ -71,6 +72,10 @@ type DataRequestOptions struct {
 	IncludeDetails bool   `cbor:"1,keyasint"`
 }
 
+type ZfsDataRequest struct {
+	Force bool `cbor:"0,keyasint,omitempty"`
+}
+
 type ContainerLogsRequest struct {
 	ContainerID string `cbor:"0,keyasint"`
 }
@@ -80,5 +85,9 @@ type ContainerInfoRequest struct {
 }
 
 type SystemdInfoRequest struct {
+	ServiceName string `cbor:"0,keyasint"`
+}
+
+type SystemdLogsRequest struct {
 	ServiceName string `cbor:"0,keyasint"`
 }

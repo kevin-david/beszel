@@ -4,86 +4,15 @@ package systems
 
 import (
 	"context"
-	"slices"
+	"net"
 	"testing"
+	"time"
 
+	"github.com/henrygd/beszel/internal/common"
 	"github.com/henrygd/beszel/internal/entities/system"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/ssh"
 )
-
-func TestRebootedFromUptime(t *testing.T) {
-	const day = 86400
-	tests := []struct {
-		name     string
-		previous uint64
-		current  uint64
-		rebooted bool
-	}{
-		// A restart drops uptime far below the previous observation.
-		{name: "reboot after a day", previous: day, current: 30, rebooted: true},
-		{name: "reboot just past tolerance", previous: 300, current: 300 - rebootUptimeTolerance - 1, rebooted: true},
-
-		// The agent cannot report before it is running, so a zero reading means
-		// the platform is unsupported or the read failed - never a fresh boot.
-		{name: "current read failed after long uptime", previous: day, current: 0},
-		{name: "unsupported platform reports zero forever", previous: 0, current: 0},
-
-		// Falls out of the arithmetic with no special case.
-		{name: "first observation", previous: 0, current: day},
-
-		// Steady state.
-		{name: "normal increase", previous: day, current: day + 60},
-		{name: "unchanged", previous: day, current: day},
-
-		// Wall-clock derived uptime (darwin/BSD/solaris) wobbles without a reboot.
-		{name: "small backwards clock step", previous: day, current: day - 5},
-		{name: "backwards step exactly at tolerance", previous: day, current: day - rebootUptimeTolerance},
-
-		// Accepted limitation: a restart on a host that had only just booted
-		// drops uptime by less than the tolerance, and is not reported.
-		{name: "restart too soon after booting is missed", previous: 130, current: 50},
-
-		// A clock step past boot time underflows uint64 there; neither the
-		// absurd value nor recovering from it may be reported as a reboot.
-		{name: "underflowed current", previous: day, current: ^uint64(0) - 100},
-		{name: "underflowed previous recovering", previous: ^uint64(0) - 100, current: day},
-
-		// The implausibility ceiling must not swallow genuinely long uptimes.
-		{name: "reboot after ten years up", previous: 10 * 365 * day, current: 45, rebooted: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := rebootedFromUptime(tt.previous, tt.current); got != tt.rebooted {
-				t.Fatalf("rebootedFromUptime(%d, %d) = %v, want %v", tt.previous, tt.current, got, tt.rebooted)
-			}
-		})
-	}
-}
-
-func TestReconcileFilesystemState(t *testing.T) {
-	tests := []struct {
-		name            string
-		previous        map[string]bool
-		current         map[string]bool
-		previousMissing []string
-		wantMissing     []string
-	}{
-		{name: "old agent preserves active state", previousMissing: []string{"usb"}, wantMissing: []string{"usb"}},
-		{name: "first missing sample is pending", previous: map[string]bool{"usb": true}, current: map[string]bool{"usb": false}},
-		{name: "second missing sample confirms", previous: map[string]bool{"usb": false}, current: map[string]bool{"usb": false}, wantMissing: []string{"usb"}},
-		{name: "recovery clears missing", previous: map[string]bool{"usb": false}, current: map[string]bool{"usb": true}, previousMissing: []string{"usb"}},
-		{name: "overlapping failure replaces recovered mount", previous: map[string]bool{"backup": false, "media": false}, current: map[string]bool{"backup": true, "media": false}, previousMissing: []string{"backup"}, wantMissing: []string{"media"}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := reconcileFilesystemState(tt.previous, tt.current, tt.previousMissing)
-			if !slices.Equal(got, tt.wantMissing) {
-				t.Fatalf("reconcileFilesystemState() = %v, want %v", got, tt.wantMissing)
-			}
-		})
-	}
-}
 
 func TestCombinedData_MigrateDeprecatedFields(t *testing.T) {
 	t.Run("Migrate NetworkSent and NetworkRecv to Bandwidth", func(t *testing.T) {
@@ -147,6 +76,63 @@ func TestCombinedData_MigrateDeprecatedFields(t *testing.T) {
 		if cd.Stats.DiskReadPs != 0 || cd.Stats.DiskWritePs != 0 {
 			t.Errorf("expected DiskReadPs and DiskWritePs to be reset, got %f, %f", cd.Stats.DiskReadPs, cd.Stats.DiskWritePs)
 		}
+	})
+
+	t.Run("Migrate ExtraFs DiskReadPs and DiskWritePs to DiskReadBytes and DiskWriteBytes", func(t *testing.T) {
+		cd := &system.CombinedData{
+			Stats: system.Stats{
+				ExtraFs: map[string]*system.FsStats{
+					"old": {DiskReadPs: 1.5, DiskWritePs: 2.5},
+					"new": {DiskReadBytes: 100, DiskWriteBytes: 200},
+					"nil": nil,
+				},
+			},
+		}
+		migrateDeprecatedFields(cd, true)
+
+		old := cd.Stats.ExtraFs["old"]
+		if old.DiskReadBytes != uint64(1.5*1024*1024) || old.DiskWriteBytes != uint64(2.5*1024*1024) {
+			t.Errorf("expected migrated bytes, got %d, %d", old.DiskReadBytes, old.DiskWriteBytes)
+		}
+		if old.DiskReadPs != 0 || old.DiskWritePs != 0 {
+			t.Errorf("expected DiskReadPs and DiskWritePs to be reset, got %f, %f", old.DiskReadPs, old.DiskWritePs)
+		}
+		if newFs := cd.Stats.ExtraFs["new"]; newFs.DiskReadBytes != 100 || newFs.DiskWriteBytes != 200 {
+			t.Errorf("expected existing bytes to be kept, got %d, %d", newFs.DiskReadBytes, newFs.DiskWriteBytes)
+		}
+	})
+
+	t.Run("Migrate memory GB fields to bytes", func(t *testing.T) {
+		const gb = 1024 * 1024 * 1024
+		cd := &system.CombinedData{
+			Stats: system.Stats{Mem: 16, MemUsed: 4.5, MemBuffCache: 2, MemZfsArc: 1, Swap: 4, SwapUsed: 0.5},
+		}
+		migrateDeprecatedFields(cd, true)
+
+		require.Equal(t, [4]uint64{16 * gb, 4.5 * gb, 2 * gb, 1 * gb}, cd.Stats.MemBytes)
+		require.Equal(t, [2]uint64{4 * gb, 0.5 * gb}, cd.Stats.SwapBytes)
+		// GB fields are kept for third-party integrations
+		require.Equal(t, 16.0, cd.Stats.Mem)
+		require.Equal(t, 4.5, cd.Stats.MemUsed)
+		require.Equal(t, 0.5, cd.Stats.SwapUsed)
+	})
+
+	t.Run("Keep memory bytes and GB fields from newer agents", func(t *testing.T) {
+		cd := &system.CombinedData{
+			Stats: system.Stats{
+				Mem: 0.06, MemUsed: 0.01, Swap: 0.03, SwapUsed: 0.01,
+				MemBytes:  [4]uint64{64 << 20, 12 << 20, 3 << 20, 0},
+				SwapBytes: [2]uint64{32 << 20, 1 << 20},
+			},
+		}
+		migrateDeprecatedFields(cd, true)
+
+		require.Equal(t, [4]uint64{64 << 20, 12 << 20, 3 << 20, 0}, cd.Stats.MemBytes)
+		require.Equal(t, [2]uint64{32 << 20, 1 << 20}, cd.Stats.SwapBytes)
+		require.Equal(t, 0.06, cd.Stats.Mem)
+		require.Equal(t, 0.01, cd.Stats.MemUsed)
+		require.Equal(t, 0.03, cd.Stats.Swap)
+		require.Equal(t, 0.01, cd.Stats.SwapUsed)
 	})
 
 	t.Run("Migrate Info fields to Details struct", func(t *testing.T) {
@@ -247,4 +233,71 @@ func TestSetDownAfterContextCancelled(t *testing.T) {
 	if sys.Status != up {
 		t.Fatalf("status should be untouched, got %q", sys.Status)
 	}
+}
+
+func TestSSHDisabledSkipsSSHFallback(t *testing.T) {
+	t.Setenv("DISABLE_SSH", "true")
+	// manager is nil on purpose: any SSH attempt would panic
+	sys := &System{}
+
+	var result string
+	err := sys.request(context.Background(), common.GetContainerInfo, nil, &result)
+	require.ErrorIs(t, err, errSSHDisabled)
+
+	_, err = sys.fetchDataFromAgent(common.DataRequestOptions{})
+	require.ErrorIs(t, err, errSSHDisabled)
+}
+
+func TestSSHFallbackDialsAgentUnlessDisabled(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		hubEnv   string
+		wantDial bool
+	}{
+		{name: "enabled", wantDial: true},
+		{name: "disabled on hub", hubEnv: "DISABLE_SSH"},
+		{name: "disabled on hub with prefix", hubEnv: "BESZEL_HUB_DISABLE_SSH"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.hubEnv != "" {
+				t.Setenv(tc.hubEnv, "true")
+			}
+			listener, err := net.Listen("tcp", "127.0.0.1:0")
+			require.NoError(t, err)
+			defer listener.Close()
+			accepted := make(chan struct{}, 1)
+			go func() {
+				if conn, err := listener.Accept(); err == nil {
+					accepted <- struct{}{}
+					conn.Close()
+				}
+			}()
+
+			host, port, _ := net.SplitHostPort(listener.Addr().String())
+			sm := &SystemManager{sshConfig: &ssh.ClientConfig{HostKeyCallback: ssh.InsecureIgnoreHostKey(), Timeout: time.Second}}
+			sys := &System{Host: host, Port: port, Status: down, manager: sm, ctx: context.Background()}
+
+			_, err = sys.fetchDataFromAgent(common.DataRequestOptions{})
+			require.Error(t, err) // listener isn't a real agent
+			if !tc.wantDial {
+				require.ErrorIs(t, err, errSSHDisabled)
+			}
+
+			select {
+			case <-accepted:
+				require.True(t, tc.wantDial, "hub must not dial SSH when it is disabled")
+			case <-time.After(200 * time.Millisecond):
+				require.False(t, tc.wantDial, "hub must dial SSH when it is enabled")
+			}
+		})
+	}
+}
+
+func TestCreateRecordsSavesCpuSockets(t *testing.T) {
+	sys, app := newTestSystemWithHub(t)
+	_, err := sys.createRecords(&system.CombinedData{Details: &system.Details{Hostname: "host", Sockets: 2}})
+	require.NoError(t, err)
+	record, err := app.FindRecordById("system_details", sys.Id)
+	require.NoError(t, err)
+	require.Equal(t, 2, record.GetInt("sockets"))
 }

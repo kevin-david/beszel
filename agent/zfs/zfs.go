@@ -4,155 +4,59 @@ package zfs
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"io"
-	"log/slog"
+	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
+
+var commandTimeout = 10 * time.Second
+
+var commandOutput = func(name string, args ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Env = append(os.Environ(), "LC_ALL=C", "LANG=C")
+	out, err := cmd.Output()
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf("%s timed out after %s: %w", name, commandTimeout, ctx.Err())
+	}
+	return out, err
+}
 
 // ErrNoZfs is returned when the ZFS utilities or kernel interfaces are unavailable.
 var ErrNoZfs = errors.New("zfs utilities unavailable")
 
 // PoolStat is a snapshot of a ZFS pool's capacity and health.
 type PoolStat struct {
+	DisplayName string // optional friendly name; Name remains the stable key
+	MountID     string // Btrfs filesystem identity, empty for other backends
+	IODevice    string // sole Btrfs member device, if known
+	Raw         bool   // physical accounting rather than usable filesystem space
+	Name        string
+	Size        uint64 // total capacity in bytes
+	Alloc       uint64 // allocated bytes
+	Free        uint64 // free bytes
+	Health      string // ONLINE, DEGRADED, FAULTED, ...
+}
+
+// PoolKernelStat is the inexpensive pool telemetry exposed by the ZFS kernel.
+// NRead and NWrite are cumulative byte counters since the pool was imported.
+type PoolKernelStat struct {
 	Name   string
-	Size   uint64 // total capacity in bytes
-	Alloc  uint64 // allocated bytes
-	Free   uint64 // free bytes
-	Health string // ONLINE, DEGRADED, FAULTED, ...
+	Health string
+	NRead  uint64
+	NWrite uint64
 }
 
-// PoolIoStats holds per-second I/O rates for a pool from `zpool iostat`.
+// PoolIoStats holds calculated per-second I/O rates for a pool.
 type PoolIoStats struct {
-	NRead  uint64 // bytes/s read
-	NWrite uint64 // bytes/s written
-}
-
-var zpoolIostatRowRe = regexp.MustCompile(`^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$`)
-
-// PoolIoWatcher streams per-pool I/O rates from a long-running
-// `zpool iostat -p 1` process and keeps the most recent per-second sample.
-// It restarts itself if the process dies (e.g. after a pool export) until
-// stopped.
-type PoolIoWatcher struct {
-	mu      sync.Mutex
-	cmd     *exec.Cmd
-	latest  map[string]PoolIoStats
-	last    time.Time
-	stopped bool
-}
-
-// NewPoolIoWatcher starts the streaming `zpool iostat -p 1` process.
-func NewPoolIoWatcher() (*PoolIoWatcher, error) {
-	w := &PoolIoWatcher{latest: make(map[string]PoolIoStats)}
-	if err := w.start(); err != nil {
-		return nil, err
-	}
-	return w, nil
-}
-
-// start spawns the iostat process and begins reading its output. No-op once
-// stopped.
-func (w *PoolIoWatcher) start() error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	if w.stopped {
-		return nil
-	}
-	cmd := exec.Command("zpool", "iostat", "-p", "1")
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-	w.cmd = cmd
-	go w.readLoop(cmd, stdout)
-	return nil
-}
-
-// readLoop consumes the iostat stream until it ends, then restarts unless
-// stopped. A failed restart is retried on a short cadence so transient spawn
-// failures do not kill pool I/O permanently. When the agent process exits, the
-// zpool child receives SIGPIPE on the closed pipe and terminates on its own.
-func (w *PoolIoWatcher) readLoop(cmd *exec.Cmd, stdout io.Reader) {
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		w.handleLine(scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		slog.Debug("ZFS pool I/O watcher stream ended", "err", err)
-	}
-	if err := cmd.Wait(); err != nil {
-		slog.Debug("ZFS pool I/O watcher process ended", "err", err)
-	}
-	for {
-		w.mu.Lock()
-		stopped := w.stopped
-		w.mu.Unlock()
-		if stopped {
-			return
-		}
-		time.Sleep(time.Second)
-		if err := w.start(); err != nil {
-			slog.Debug("ZFS pool I/O watcher restart failed", "err", err)
-			continue
-		}
-		return
-	}
-}
-
-// handleLine ingests one line of `zpool iostat -p` output. Only pool rows
-// (7 whitespace-separated numeric columns) match; header and separator lines
-// are ignored. Later rows overwrite earlier ones, so `latest` converges to the
-// per-second interval rates.
-func (w *PoolIoWatcher) handleLine(line string) {
-	m := zpoolIostatRowRe.FindStringSubmatch(strings.TrimRight(line, " "))
-	if m == nil {
-		return
-	}
-	read, err1 := strconv.ParseUint(m[6], 10, 64)
-	write, err2 := strconv.ParseUint(m[7], 10, 64)
-	if err1 != nil || err2 != nil {
-		return
-	}
-	w.mu.Lock()
-	w.latest[m[1]] = PoolIoStats{NRead: read, NWrite: write}
-	w.last = time.Now()
-	w.mu.Unlock()
-}
-
-// Latest returns a copy of the most recent per-pool rates, or ok=false when no
-// sample has arrived within the last 10 seconds.
-func (w *PoolIoWatcher) Latest() (map[string]PoolIoStats, bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	if len(w.latest) == 0 || time.Since(w.last) > 10*time.Second {
-		return nil, false
-	}
-	out := make(map[string]PoolIoStats, len(w.latest))
-	for name, io := range w.latest {
-		out[name] = io
-	}
-	return out, true
-}
-
-// Stop terminates the iostat process and disables restarts.
-func (w *PoolIoWatcher) Stop() {
-	w.mu.Lock()
-	w.stopped = true
-	cmd := w.cmd
-	w.mu.Unlock()
-	if cmd != nil && cmd.Process != nil {
-		_ = cmd.Process.Kill()
-	}
+	NRead  uint64
+	NWrite uint64
 }
 
 // Dataset is a single ZFS dataset with usage information.
@@ -164,19 +68,81 @@ type Dataset struct {
 }
 
 // PoolStats returns capacity and health for all pools on the system using
-// `zpool list`. The same source node_exporter uses for zfs_pool_healthy.
+// `zpool list`, with capacity taken from each pool's root dataset where it can
+// be read. Frequent health and I/O sampling uses PoolKernelStats instead.
 func PoolStats() ([]PoolStat, error) {
-	out, err := exec.Command("zpool", "list", "-Hp", "-o", "name,size,alloc,free,health").Output()
+	if err := checkZfsDevice(); err != nil {
+		return nil, err
+	}
+	out, err := commandOutput("zpool", "list", "-Hp", "-o", "name,size,alloc,free,health")
 	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && strings.Contains(string(exitErr.Stderr), "no pools available") {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("zpool list: %w", err)
 	}
-	return parseZpoolListOutput(out)
+	pools, err := parseZpoolListOutput(out)
+	if err != nil || len(pools) == 0 {
+		return pools, err
+	}
+	applyRootDatasetCapacity(pools)
+	return pools, nil
+}
+
+// applyRootDatasetCapacity replaces the raw `zpool list` figures, which include
+// parity on raidz and dRAID vdevs, with each pool's root dataset used and avail.
+// As with Btrfs, the effective capacity is used+avail, so Size-Alloc is what
+// applications can still write and the usage ratio matches df. A pool whose
+// root dataset cannot be read keeps its raw figures and is flagged as Raw.
+func applyRootDatasetCapacity(pools []PoolStat) {
+	var roots map[string]Dataset
+	if out, err := commandOutput("zfs", "list", "-Hp", "-d", "0", "-o", "name,used,avail,refquota"); err == nil {
+		roots = parseRootDatasetOutput(out)
+	}
+	for i := range pools {
+		root, ok := roots[pools[i].Name]
+		if !ok {
+			pools[i].Raw = true
+			continue
+		}
+		pools[i].Size, pools[i].Alloc, pools[i].Free = root.Used+root.Avail, root.Used, root.Avail
+	}
+}
+
+// parseRootDatasetOutput parses `zfs list -Hp -d 0 -o name,used,avail,refquota`
+// output into root datasets keyed by pool name. Roots with a refquota are left
+// out: the quota caps avail by the root's own data rather than the pool's free
+// space, which would understate capacity when children hold most of the data.
+// Malformed lines are skipped, so their pools fall back to raw figures.
+func parseRootDatasetOutput(out []byte) map[string]Dataset {
+	roots := make(map[string]Dataset)
+	scanner := bufio.NewScanner(bytes.NewReader(out))
+	for scanner.Scan() {
+		fields := strings.Split(strings.TrimSpace(scanner.Text()), "\t")
+		if len(fields) != 4 || (fields[3] != "0" && fields[3] != "none") {
+			continue
+		}
+		used, err := strconv.ParseUint(fields[1], 10, 64)
+		if err != nil {
+			continue
+		}
+		avail, err := strconv.ParseUint(fields[2], 10, 64)
+		if err != nil {
+			continue
+		}
+		roots[fields[0]] = Dataset{Name: fields[0], Used: used, Avail: avail}
+	}
+	return roots
 }
 
 // Datasets returns all datasets on the system with usage and mountpoint
 // information using `zfs list` (recursive by default).
 func Datasets() ([]Dataset, error) {
-	out, err := exec.Command("zfs", "list", "-Hp", "-o", "name,used,avail,mountpoint").Output()
+	if err := checkZfsDevice(); err != nil {
+		return nil, err
+	}
+	out, err := commandOutput("zfs", "list", "-Hp", "-o", "name,used,avail,mountpoint")
 	if err != nil {
 		return nil, fmt.Errorf("zfs list: %w", err)
 	}
@@ -192,6 +158,9 @@ func parseZpoolListOutput(out []byte) ([]PoolStat, error) {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
+		}
+		if line == "no pools available" && len(pools) == 0 {
+			return nil, nil
 		}
 		fields := strings.Split(line, "\t")
 		if len(fields) < 5 {

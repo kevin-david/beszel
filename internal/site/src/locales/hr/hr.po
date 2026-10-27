@@ -8,7 +8,7 @@ msgstr ""
 "Language: hr\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-17 19:22\n"
+"PO-Revision-Date: 2026-10-20 17:17\n"
 "Last-Translator: \n"
 "Language-Team: Croatian\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
@@ -26,9 +26,28 @@ msgstr "{0} dostupno"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
-#: src/components/routes/settings/alerts-history-data-table.tsx
+#: src/components/ui/data-table-pagination.tsx
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} od {1} redaka izabrano."
+
+#. placeholder {0}: table.getFilteredRowModel().rows.length
+#: src/components/ui/data-table-pagination.tsx
+msgid "{0} row(s)"
+msgstr "{0} redak(a)"
+
+#. placeholder {0}: selectedIds.size
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "{0} selected"
+msgstr "Odabrano: {0}"
+
+#: src/components/active-alerts.tsx
+msgid "{alertCount, plural, one {# active alert} other {# active alerts}}"
+msgstr "{alertCount, plural, one {# aktivno upozorenje} few {# aktivna upozorenja} other {# aktivnih upozorenja}}"
+
+#: src/components/active-alerts.tsx
+msgid "{alertCount, plural, one {# alert is currently triggered} other {# alerts are currently triggered}}"
+msgstr "{alertCount, plural, one {# upozorenje je trenutno aktivirano} few {# upozorenja su trenutno aktivirana} other {# upozorenja je trenutno aktivirano}}"
 
 #: src/components/routes/system/info-bar.tsx
 msgid "{cores, plural, one {# core} other {# cores}}"
@@ -46,9 +65,37 @@ msgstr "{count, plural, one {{countString} sat} other {{countString} sati}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minuta} few {{countString} minuta} many {{countString} minuta} other {{countString} minute}}"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "{daysLeft, plural, one {# day} other {# days}}"
+msgstr "{daysLeft, plural, one {# dan} few {# dana} other {# dana}}"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+msgid "{diskName} I/O"
+msgstr "I/O za {diskName}"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "{numFailed, plural, one {# failed service} other {# failed services}}"
+msgstr "{numFailed, plural, one {# neuspjela usluga} few {# neuspjele usluge} other {# neuspjelih usluga}}"
+
+#: src/components/active-alerts.tsx
+msgid "{systemCount, plural, one {Across # system} other {Across # systems}}"
+msgstr "{systemCount, plural, one {Na # sustavu} few {Na # sustava} other {Na # sustava}}"
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr "{threads, plural, one {# nit} few {# niti} other {# niti}}"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "{total, plural, one {# update} other {# updates}}"
+msgstr "{total, plural, one {# ažuriranje} few {# ažuriranja} other {# ažuriranja}}"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "{totalCount, plural, one {# service} other {# services}}"
+msgstr "{totalCount, plural, one {# usluga} few {# usluge} other {# usluga}}"
+
+#: src/components/alerts-history-columns.tsx
+msgid "{value, plural, one {# day} other {# days}}"
+msgstr "{value, plural, one {# dan} few {# dana} other {# dana}}"
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -89,15 +136,11 @@ msgstr "30 dana"
 msgid "5 min"
 msgstr "5 minuta"
 
-#: src/lib/alerts.ts
-msgid "A configured filesystem is unavailable"
-msgstr ""
-
 #. Table column
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "Akcije"
@@ -117,14 +160,25 @@ msgstr "Aktivna Upozorenja"
 msgid "Active state"
 msgstr "Aktivno stanje"
 
-#: src/components/add-system.tsx
-#: src/components/add-system.tsx
-#: src/components/navbar.tsx
-#: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Add"
+msgstr "Dodaj"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "Dodaj {foo}"
+
+#: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+msgid "Add System"
+msgstr "Dodaj Sustav"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -188,6 +242,7 @@ msgstr "Svi Sustavi"
 msgid "Are you sure you want to delete {name}?"
 msgstr "Jeste li sigurni da želite izbrisati {name}?"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "Jeste li sigurni?"
@@ -196,9 +251,15 @@ msgstr "Jeste li sigurni?"
 msgid "Automatic copy requires a secure context."
 msgstr "Automatsko kopiranje zahtijeva siguran kontekst."
 
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Disk space available"
 msgid "Available"
-msgstr ""
+msgstr "Dostupno"
+
+#. Package version available to install
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Available"
+msgstr "Dostupno"
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -208,15 +269,13 @@ msgstr "Prosjek"
 msgid "Average CPU utilization of containers"
 msgstr "Prosječna iskorištenost procesora u spremnicima"
 
-#. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
-msgid "Average drops below <0>{value}{0}</0>"
-msgstr "Prosjek pada ispod <0>{value}{0}</0>"
+msgid "Average drops below <0>{value}{unitLabel}</0>"
+msgstr "Prosjek pada ispod <0>{value}{unitLabel}</0>"
 
-#. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
-msgid "Average exceeds <0>{value}{0}</0>"
-msgstr "Prosjek premašuje <0>{value}{0}</0>"
+msgid "Average exceeds <0>{value}{unitLabel}</0>"
+msgstr "Prosjek premašuje <0>{value}{unitLabel}</0>"
 
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Average number of I/O operations waiting to be serviced"
@@ -231,6 +290,10 @@ msgctxt "Disk I/O average operation time (iostat await)"
 msgid "Average queue to completion time per operation"
 msgstr "Prosječno vrijeme od čekanja do završetka po operaciji"
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Average response time"
+msgstr "Prosječno vrijeme odziva"
+
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "Prosječna iskorištenost procesora u cijelom sustavu"
@@ -243,6 +306,15 @@ msgstr "Prosječna iskorištenost {0}"
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Prosječna iskorištenost grafičkih procesora"
+
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Average, minimum, and maximum response time"
+msgstr "Prosječno, minimalno i maksimalno vrijeme odziva"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Avg 1h"
+msgstr "Prosjek 1 h"
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -257,7 +329,7 @@ msgstr "Mrežna Propusnost"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr ""
+msgstr "Baterija"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 #: src/components/routes/system/charts/sensor-charts.tsx
@@ -305,6 +377,15 @@ msgstr "Bitovi (Kbps, Mbps, Gbps)"
 msgid "Boot state"
 msgstr "Stanje pokretanja"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add"
+msgstr "Skupno dodavanje"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add {foo}"
+msgstr "Skupno dodavanje: {foo}"
+
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Bytes (KB/s, MB/s, GB/s)"
@@ -326,6 +407,7 @@ msgstr "Može se pokrenuti"
 msgid "Can stop"
 msgstr "Može se zaustaviti"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -337,6 +419,7 @@ msgid "Capabilities"
 msgstr "Mogućnosti"
 
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Capacity"
 msgstr "Kapacitet"
 
@@ -347,6 +430,28 @@ msgstr "Oprez - mogući gubitak podataka"
 #: src/components/routes/settings/general.tsx
 msgid "Celsius (°C)"
 msgstr "Celsius (°C)"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Certificate"
+msgstr "Certifikat"
+
+#: src/lib/alerts.ts
+msgid "Certificate Expiration"
+msgstr "Istek certifikata"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Certificate expired {expires}"
+msgstr "Certifikat je istekao {expires}"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Certificate expires {expires}"
+msgstr "Certifikat ističe {expires}"
+
+#. Version change
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Change"
+msgstr "Promjena"
 
 #: src/components/routes/settings/general.tsx
 msgid "Change display units for metrics."
@@ -389,17 +494,32 @@ msgstr "Provjerite svoju uslugu nadzora"
 msgid "Check your notification service"
 msgstr "Provjerite svoju obavještajnu uslugu"
 
-#: src/components/routes/system/zfs-table.tsx
-msgid "Checksum"
-msgstr ""
+#. placeholder {0}: formatShortDate(new Date(data.checkedAt * 1000).toISOString())
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Checked {0}"
+msgstr "Provjereno {0}"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Checksum errors"
+msgstr "Pogreške kontrolnog zbroja"
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/routes/system/package-updates-table.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Očisti"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear all"
+msgstr "Izbriši sve"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear matches"
+msgstr "Izbriši podudaranja"
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -409,9 +529,9 @@ msgstr "Kliknite na spremnik za prikaz više informacija."
 msgid "Click on a device to view more information."
 msgstr "Kliknite na uređaj da biste vidjeli više informacija."
 
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Click on a pool to view vdev and dataset details."
-msgstr ""
+msgstr "Kliknite na spremište za prikaz pojedinosti o vdevovima i skupovima podataka."
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -426,9 +546,21 @@ msgstr "Pritisnite za kopiranje"
 msgid "Command line instructions"
 msgstr "Upute za naredbeni redak"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Compare with other systems"
+msgstr "Usporedi s drugim sustavima"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Compare with other targets"
+msgstr "Usporedi s drugim ciljevima"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
 msgstr "Konfigurirajte način primanja obavijesti upozorenja."
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Configure response monitoring from this agent."
+msgstr "Konfigurirajte praćenje odziva s ovog agenta."
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
@@ -443,10 +575,19 @@ msgstr "Sukobi"
 msgid "Connection is down"
 msgstr "Veza je pala"
 
+#: src/lib/alerts.ts
+msgid "Container"
+msgstr "Kontejner"
+
+#: src/lib/alerts.ts
+msgid "Container Health"
+msgstr "Zdravlje kontejnera"
+
 #: src/components/routes/system.tsx
 msgid "Containers"
 msgstr "Kontejneri"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Continue"
@@ -455,6 +596,10 @@ msgstr "Nastavi"
 #: src/lib/utils.ts
 msgid "Copied to clipboard"
 msgstr "Kopirano u međuspremnik"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Copy bulk config"
+msgstr "Kopiraj skupnu konfiguraciju"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -493,7 +638,7 @@ msgstr "Kopiraj naziv"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Copy public key"
-msgstr ""
+msgstr "Kopiraj javni ključ"
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Copy text"
@@ -506,6 +651,11 @@ msgstr "Kopirajte instalacijsku komandu za opisanog agenta ili automatski regist
 #: src/components/add-system.tsx
 msgid "Copy the<0>docker-compose.yml</0> content for the agent below, or register agents automatically with a <1>universal token</1>."
 msgstr "Kopirajte sadržaj <0>docker-compose.yml</0> datoteke za opisanog agenta ili automatski registrirajte agenta uz pomoć <1>sveopćeg tokena</1>."
+
+#: src/components/token-value.tsx
+#: src/components/token-value.tsx
+msgid "Copy token"
+msgstr "Kopiraj token"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Copy YAML"
@@ -526,9 +676,17 @@ msgstr "Procesor"
 msgid "CPU Cores"
 msgstr "CPU jezgre"
 
+#: src/lib/alerts.ts
+msgid "CPU I/O Wait"
+msgstr "CPU čekanje na U/I (IOWait)"
+
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "CPU Peak"
 msgstr "CPU vrhunac"
+
+#: src/lib/alerts.ts
+msgid "CPU Steal Time"
+msgstr "Ukradeno CPU vrijeme (Steal)"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "CPU time"
@@ -562,13 +720,34 @@ msgstr "Kreiran"
 msgid "Critical (%)"
 msgstr "Kritično (%)"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data read since boot"
+msgstr "Ukupno pročitani podaci od pokretanja"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data written since boot"
+msgstr "Ukupno zapisani podaci od pokretanja"
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "Kumulativno preuzimanje"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Read"
+msgstr "Ukupno čitanje"
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
 msgstr "Kumulativno otpremanje"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Write"
+msgstr "Ukupno zapisivanje"
+
+#. Current package version
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Current"
+msgstr "Trenutno"
 
 #. Context: Battery state
 #. Context: Battery state
@@ -587,10 +766,6 @@ msgstr "Ciklusi"
 msgid "Daily"
 msgstr "Dnevno"
 
-#: src/components/routes/system/zfs-table.tsx
-msgid "Dataset"
-msgstr ""
-
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
@@ -600,10 +775,10 @@ msgstr "Zadano"
 msgid "Default time period"
 msgstr "Zadano vremensko razdoblje"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Delete"
 msgstr "Izbriši"
@@ -634,15 +809,10 @@ msgstr "Prazni se"
 msgid "Disk"
 msgstr "Disk"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Disk I/O"
-msgstr "Disk I/O"
-
 #: src/components/routes/settings/general.tsx
 msgid "Disk unit"
 msgstr "Mjerna jedinica za disk"
 
-#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/disk-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
@@ -652,10 +822,19 @@ msgstr "Iskorištenost Diska"
 msgid "Disk usage of {extraFsName}"
 msgstr "Iskorištenost diska od {extraFsName}"
 
+#: src/components/alert-banner-sheet.tsx
+#: src/components/alert-banner-sheet.tsx
+msgid "Dismiss"
+msgstr "Odbaci"
+
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Layout display options"
 msgid "Display"
 msgstr "Prikaz"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "DNS Server"
+msgstr "DNS poslužitelj"
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
@@ -694,15 +873,20 @@ msgstr "Preuzmi"
 msgid "Duration"
 msgstr "Trajanje"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
 msgstr "Uredi"
 
-#: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Edit {foo}"
 msgstr "Uredi {foo}"
+
+#: src/components/add-system.tsx
+msgid "Edit System"
+msgstr "Uredi Sustav"
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -732,6 +916,10 @@ msgstr "URL krajnje točke"
 msgid "Endpoint URL to ping (required)"
 msgstr "URL krajnje točke za pinganje (obavezno)"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Enter a domain name to look up. Put the resolver's IP in DNS Server."
+msgstr "Unesite naziv domene za pretraživanje. IP adresu razrješivača upišite u DNS Server."
+
 #: src/components/login/login.tsx
 msgid "Enter email address to reset password"
 msgstr "Unesite email adresu kako biste resetirali lozinku"
@@ -748,6 +936,10 @@ msgstr "Unesite jednokratnu lozinku."
 msgid "Ephemeral"
 msgstr "Efemeran"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -784,9 +976,18 @@ msgstr "Postojeći sustavi koji nisu definirani u <0>config.yml</0> datoteci bit
 msgid "Exited active"
 msgstr "Izašlo aktivno"
 
+#: src/components/alerts-history-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Expired"
+msgstr "Isteklo"
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Expires after one hour or on hub restart."
 msgstr "Istječe nakon jednog sata ili ponovnog pokretanja huba."
+
+#: src/components/alerts/alerts-sheet.tsx
+msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
+msgstr "Istječe unutar <0>{value, plural, one {# dan} few {# dana} other {# dana}}</0>"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -804,17 +1005,30 @@ msgstr "Izvoz trenutne sistemske konfiguracije."
 msgid "Fahrenheit (°F)"
 msgstr "Farenhajt (°F)"
 
-#: src/components/systems-table/systems-table-columns.tsx
-msgid "Failed"
-msgstr "Neuspješno"
-
 #: src/components/routes/system/smart-table.tsx
 msgid "Failed Attributes:"
 msgstr "Neuspjeli atributi:"
 
+#: src/lib/alerts.ts
+msgid "Failed Services"
+msgstr "Neuspjele usluge"
+
 #: src/lib/api.ts
 msgid "Failed to authenticate"
 msgstr "Neuspješna provjera autentičnosti"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to delete monitors."
+msgstr "Brisanje monitora nije uspjelo."
+
+#: src/components/systemd-table/systemd-table.tsx
+#: src/components/systemd-table/systemd-table.tsx
+msgid "Failed to load logs."
+msgstr "Učitavanje zapisa nije uspjelo."
+
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Failed to load package updates"
+msgstr "Učitavanje ažuriranja paketa nije uspjelo"
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -834,6 +1048,10 @@ msgstr "Neuspješno slanje probne obavijesti"
 msgid "Failed to update alert"
 msgstr "Neuspješno ažuriranje upozorenja"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to update monitors."
+msgstr "Ažuriranje monitora nije uspjelo."
+
 #. placeholder {0}: statusTotals[ServiceStatus.Failed]
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Failed: {0}"
@@ -841,21 +1059,20 @@ msgstr "Neuspjelo: {0}"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Fans"
-msgstr ""
+msgstr "Ventilatori"
 
 #: src/lib/alerts.ts
-msgid "Filesystem unavailable"
-msgstr ""
-
-#: src/components/routes/system/zfs-table.tsx
-msgid "Filter datasets..."
+msgid "Filesystem Availability"
 msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
+#: src/components/routes/system/package-updates-table.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -877,10 +1094,11 @@ msgstr "Za <0>{min}</0> {min, plural, one {minutu} other {minute}}"
 msgid "Forgot password?"
 msgstr "Zaboravljena lozinka?"
 
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Free space"
 msgid "Free"
-msgstr ""
+msgstr "Slobodno"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -894,6 +1112,11 @@ msgstr "FreeBSD naredba"
 msgid "Full"
 msgstr "Puno"
 
+#: src/components/containers-table/containers-table.tsx
+#: src/components/systemd-table/systemd-table.tsx
+msgid "Fullscreen"
+msgstr "Cijeli zaslon"
+
 #. Context: General settings
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/layout.tsx
@@ -906,7 +1129,7 @@ msgstr "Globalno"
 
 #: src/components/routes/system.tsx
 msgid "GPU"
-msgstr ""
+msgstr "GPU"
 
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
@@ -926,13 +1149,13 @@ msgid "Grid"
 msgstr "Rešetka"
 
 #: src/components/containers-table/containers-table-columns.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Health"
 msgstr "Zdravlje"
 
 #: src/components/routes/settings/layout.tsx
 msgid "Heartbeat"
-msgstr ""
+msgstr "Otkucaj"
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Heartbeat Monitoring"
@@ -941,6 +1164,15 @@ msgstr "Nadzor heartbeata"
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Heartbeat sent successfully"
 msgstr "Heartbeat uspješno poslan"
+
+#: src/components/logs-display.tsx
+msgid "Hide timestamps"
+msgstr "Sakrij vremenske oznake"
+
+#: src/components/token-value.tsx
+#: src/components/token-value.tsx
+msgid "Hide token"
+msgstr "Sakrij token"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -984,18 +1216,34 @@ msgstr "Neaktivno"
 msgid "If you've lost the password to your admin account, you may reset it using the following command."
 msgstr "Ako ste izgubili lozinku za svoj administratorski račun, možete ju resetirati pomoću sljedeće naredbe."
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Ignore TLS certificate errors"
+msgstr "Zanemari pogreške TLS certifikata"
+
 #: src/components/containers-table/containers-table-columns.tsx
 msgctxt "Docker image"
 msgid "Image"
 msgstr "Slika"
 
+#: src/components/containers-table/containers-table-columns.tsx
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Docker image"
+msgid "Image update available"
+msgstr "Dostupno je ažuriranje slike"
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Neaktivno"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Interval"
-msgstr ""
+msgstr "Interval"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Interval (seconds)"
+msgstr "Interval (sekunde)"
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1048,6 +1296,7 @@ msgid "Load state"
 msgstr "Stanje učitavanja"
 
 #: src/components/systemd-table/systemd-table.tsx
+#: src/components/systemd-table/systemd-table.tsx
 msgid "Loading..."
 msgstr "Učitavanje..."
 
@@ -1068,6 +1317,7 @@ msgstr "Neuspješno pokušaj prijave"
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/navbar.tsx
+#: src/components/systemd-table/systemd-table.tsx
 msgid "Logs"
 msgstr "Zapisi"
 
@@ -1075,9 +1325,24 @@ msgstr "Zapisi"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Tražite gdje stvoriti upozorenja? Kliknite ikonu zvona <0/> u tablici sustava."
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgctxt "Packet loss"
+msgid "Loss"
+msgstr "Gubitak"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Loss 1h"
+msgstr "Gubitak 1 h"
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Main PID"
 msgstr "Glavni PID"
+
+#. Package version
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Major"
+msgstr "Veća"
 
 #: src/components/routes/settings/layout.tsx
 msgid "Manage display and notification preferences."
@@ -1092,6 +1357,11 @@ msgstr "Upute za ručno postavljanje"
 #: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "Maksimalno 1 minuta"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Max 1h"
+msgstr "Maks. 1 h"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/info-bar.tsx
@@ -1116,21 +1386,37 @@ msgid "Memory Usage"
 msgstr "Iskorištenost memorije"
 
 #: src/components/routes/system/charts/memory-charts.tsx
-msgid "Memory usage of docker containers"
-msgstr "Iskorištenost memorije Docker spremnika"
+msgid "Memory usage of containers"
+msgstr "Upotreba memorije spremnika"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Min 1h"
+msgstr "Min. 1 h"
+
+#. Package version
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Minor"
+msgstr "Manja"
 
 #. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
-msgstr ""
+msgstr "Model"
 
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitor"
+msgstr "Monitor"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitors created"
+msgstr "Monitori su izrađeni"
+
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Mountpoint"
-msgstr ""
-
-#: src/components/alerts-history-columns.tsx
-msgid "N/A"
-msgstr ""
+msgstr "Točka montiranja"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1145,9 +1431,32 @@ msgstr "Ime"
 msgid "Net"
 msgstr "Mreža"
 
+#: src/components/routes/system.tsx
+msgid "Network"
+msgstr "Mreža"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Network Monitor"
+msgstr "Mrežni monitor"
+
+#: src/lib/alerts.ts
+msgid "Network Monitor Loss"
+msgstr "Gubitak mrežnog monitora"
+
+#: src/components/command-palette.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/routes/monitors.tsx
+msgid "Network Monitors"
+msgstr "Mrežni monitori"
+
 #: src/components/routes/system/charts/network-charts.tsx
-msgid "Network traffic of docker containers"
-msgstr "Mrežni promet Docker spremnika"
+msgid "Network traffic of containers"
+msgstr "Mrežni promet spremnika"
 
 #: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1167,9 +1476,13 @@ msgstr "Mjerna jedinica za mrežu"
 msgid "No"
 msgstr "Ne"
 
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "No detail data for this pool."
-msgstr ""
+msgstr "Nema detaljnih podataka za ovo spremište."
+
+#: src/components/systemd-table/systemd-table.tsx
+msgid "No logs found."
+msgstr "Zapisi nisu pronađeni."
 
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
@@ -1179,7 +1492,9 @@ msgstr "Nema rezultata."
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
+#: src/components/routes/system/package-updates-table.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results."
@@ -1189,20 +1504,29 @@ msgstr "Nema rezultata."
 msgid "No S.M.A.R.T. attributes available for this device."
 msgstr "Nema dostupnih S.M.A.R.T. atributa za ovaj uređaj."
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "Nije pronađen nijedan sustav."
 
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "No targets found."
+msgstr "Ciljevi nisu pronađeni."
+
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "None"
-msgstr ""
+msgstr "Nema"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
 msgid "Notifications"
 msgstr "Obavijesti"
+
+#: src/lib/alerts.ts
+msgid "Notifications may include recent container log excerpts."
+msgstr "Obavijesti mogu sadržavati nedavne isječke iz zapisnika spremnika."
 
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
@@ -1211,6 +1535,28 @@ msgstr "Podrška za OAuth 2 / OIDC"
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "Prilikom svakog ponovnog pokretanja, sustavi u bazi podataka bit će ažurirani kako bi odgovarali sustavima definiranim u datoteci."
+
+#. placeholder {0}: alert.value
+#: src/components/active-alerts.tsx
+msgid "One or more certificates expire within {0, plural, one {# day} other {# days}}"
+msgstr "Jedan ili više certifikata istječe unutar {0, plural, one {# dan} few {# dana} other {# dana}}"
+
+#: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
+msgid "One or more containers are unhealthy"
+msgstr "Jedan ili više spremnika nije ispravno"
+
+#. placeholder {0}: alert.value
+#: src/components/active-alerts.tsx
+msgid "One or more monitors exceed {0}% loss"
+msgstr "Jedan ili više monitora prelaze gubitak od {0}%"
+
+#: src/lib/alerts.ts
+msgid "One or more services are in a failed state"
+msgstr "Jedna ili više usluga je u stanju neuspjeha"
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1221,21 +1567,27 @@ msgstr "Jednokratno"
 msgid "One-time password"
 msgstr "Jednokratna lozinka"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Otvori meni"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Optional. Defaults to the agent's system resolver."
+msgstr "Neobavezno. Zadano je sistemski razrješivač agenta."
 
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
 msgstr "Ili nastavi s"
 
-#: src/components/routes/system/charts/zfs-charts.tsx
+#. Package version
 #: src/components/routes/system/cpu-sheet.tsx
+#: src/components/routes/system/package-updates-table.tsx
 msgid "Other"
 msgstr "Ostalo"
 
@@ -1243,15 +1595,29 @@ msgstr "Ostalo"
 msgid "Overwrite existing alerts"
 msgstr "Prebriši postojeća upozorenja"
 
+#. Software package
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Package"
+msgstr "Paket"
+
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Package Updates"
+msgstr "Ažuriranja paketa"
+
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Packet loss (%)"
+msgstr "Gubitak paketa (%)"
+
+#: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 msgid "Page"
 msgstr "Stranica"
 
-#. placeholder {0}: table.getState().pagination.pageIndex + 1
-#. placeholder {1}: table.getPageCount()
-#: src/components/routes/settings/alerts-history-data-table.tsx
+#. placeholder {0}: pageIndex + 1
+#. placeholder {1}: Math.max(1, pageCount)
+#: src/components/ui/data-table-pagination.tsx
 msgid "Page {0} of {1}"
 msgstr "Stranica {0} od {1}"
 
@@ -1280,6 +1646,12 @@ msgstr "Zahtjev za ponovno postavljanje lozinke zaprimljen"
 msgid "Past"
 msgstr "Prošlost"
 
+#. Package version
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Patch"
+msgstr "Zakrpa"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Pause"
 msgstr "Pauza"
@@ -1317,6 +1689,10 @@ msgstr "Trajan"
 msgid "Persistence"
 msgstr "Postojanost"
 
+#: src/components/routes/system/raw-capacity-label.tsx
+msgid "Physical device space. True usable capacity is unknown. Pool disk usage alerts are disabled."
+msgstr "Fizički prostor uređaja. Stvarni iskoristivi kapacitet nije poznat. Upozorenja o iskorištenosti diskova spremišta su onemogućena."
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
 msgstr "Molimo <0>konfigurirajte SMTP server</0> kako biste osigurali isporuku upozorenja."
@@ -1350,15 +1726,16 @@ msgstr "Molimo provjerite <0>dokumentaciju</0> za upute."
 msgid "Please sign in to your account"
 msgstr "Molimo prijavite se u svoj račun"
 
-#: src/components/routes/system/zfs-table.tsx
-msgid "Pool"
-msgstr ""
-
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Pool Health"
-msgstr ""
+msgstr "Stanje spremišta"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Pool Usage"
+msgstr "Iskorištenost spremišta"
 
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Port"
 msgstr "Port"
 
@@ -1385,9 +1762,15 @@ msgstr "Preferirani jezik"
 msgid "Process started"
 msgstr "Proces pokrenut"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Protocol"
+msgstr "Protokol"
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Public key"
-msgstr ""
+msgstr "Javni ključ"
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
@@ -1400,19 +1783,35 @@ msgid "Queue Depth"
 msgstr "Dubina reda"
 
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "Tihi sati"
+
+#: src/components/routes/system/raw-capacity-label.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Raw"
+msgstr "Sirovo"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Raw usage of storage pool {displayName}"
+msgstr "Sirova iskorištenost spremišta {displayName}"
 
 #. Disk read
 #. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/zfs-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Read"
 msgstr "Pročitaj"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Read errors"
+msgstr "Pogreške čitanja"
 
 #: src/lib/alerts.ts
 msgid "Reboot"
@@ -1423,10 +1822,11 @@ msgid "Received"
 msgstr "Primljeno"
 
 #: src/components/containers-table/containers-table.tsx
-#: src/components/containers-table/containers-table.tsx
+#: src/components/logs-display.tsx
+#: src/components/logs-display.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/systemd-table/systemd-table.tsx
 msgid "Refresh"
 msgstr "Osvježi"
 
@@ -1460,14 +1860,38 @@ msgstr "Resetiraj Lozinku"
 msgid "Resolved"
 msgstr "Razrješeno"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/routes/system/charts/monitors-charts.tsx
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Response"
+msgstr "Odziv"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Response time monitoring from agents."
+msgstr "Praćenje vremena odziva agenata."
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Restarts"
 msgstr "Ponovna pokretanja"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Resume"
 msgstr "Nastavi"
 
+#: src/components/token-value.tsx
+#: src/components/token-value.tsx
+msgid "Reveal token"
+msgstr "Prikaži token"
+
+#. Package version
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Revision"
+msgstr "Revizija"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgctxt "Root disk label"
 msgid "Root"
@@ -1477,7 +1901,7 @@ msgstr "Korijen"
 msgid "Rotate token"
 msgstr "Promijeni token"
 
-#: src/components/routes/settings/alerts-history-data-table.tsx
+#: src/components/ui/data-table-pagination.tsx
 msgid "Rows per page"
 msgstr "Redovi po stranici"
 
@@ -1493,7 +1917,7 @@ msgstr "S.M.A.R.T. Detalji"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T. Samotestiranje"
 
-#: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "Spremi {foo}"
 
@@ -1505,6 +1929,10 @@ msgstr "Spremite adresu pomoću tipke enter ili zarez. Ostavite prazno kako bist
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "Spremi Postavke"
+
+#: src/components/add-system.tsx
+msgid "Save System"
+msgstr "Spremi Sustav"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1522,11 +1950,6 @@ msgstr "Rasporedi tihe sate kada se obavijesti neće slati, na primjer tijekom r
 msgid "Schedule quiet hours where notifications will not be sent."
 msgstr "Rasporedi tihe sate kada se obavijesti neće slati."
 
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
-msgid "Scrub"
-msgstr ""
-
 #: src/components/navbar.tsx
 msgid "Search"
 msgstr "Pretraži"
@@ -1535,9 +1958,27 @@ msgstr "Pretraži"
 msgid "Search for systems or settings..."
 msgstr "Pretraži sustave ili postavke..."
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Search systems"
+msgstr "Pretraži sustave"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Search targets"
+msgstr "Pretraži ciljeve"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Seconds between pings (default: 60)"
 msgstr "Sekunde između pingova (zadano: 60)"
+
+#. Security update
+#: src/components/routes/system/package-updates-table.tsx
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Security"
+msgstr "Sigurnost"
+
+#: src/components/routes/system/package-updates-table.tsx
+msgid "Security: {securityCount}"
+msgstr "Sigurnost: {securityCount}"
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "See <0>notification settings</0> to configure how you receive alerts."
@@ -1546,6 +1987,31 @@ msgstr "Pogledajte <0>postavke obavijesti</0> kako biste konfigurirali način pr
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Odaberi {foo}"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select a system"
+msgstr "Odaberite sustav"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select all"
+msgstr "Odaberi sve"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select matches"
+msgstr "Odaberi podudaranja"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select row"
+msgstr "Odaberi redak"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select systems"
+msgstr "Odaberi sustave"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select targets"
+msgstr "Odaberi ciljeve"
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
@@ -1590,7 +2056,6 @@ msgstr "Postavite sljedeće varijable okruženja na svom Beszel hubu kako biste 
 #: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
-#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "Postavke"
 
@@ -1598,18 +2063,24 @@ msgstr "Postavke"
 msgid "Settings saved"
 msgstr "Postavke spremljene"
 
+#: src/components/logs-display.tsx
+#: src/components/logs-display.tsx
+msgid "Show timestamps"
+msgstr "Prikaži vremenske oznake"
+
 #: src/components/login/auth-form.tsx
 msgid "Sign in"
 msgstr "Prijava"
 
-#: src/components/routes/system/zfs-table.tsx
-msgid "Size"
-msgstr ""
+#: src/components/routes/system/charts/wifi-chart.tsx
+msgid "Signal strength of connected Wi-Fi interfaces"
+msgstr "Jačina signala povezanih Wi-Fi sučelja"
 
 #: src/components/command-palette.tsx
 msgid "SMTP settings"
 msgstr "SMTP postavke"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Sort By"
 msgstr "Sortiraj po"
@@ -1622,7 +2093,7 @@ msgstr "Vrijeme početka"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "Stanje"
@@ -1650,12 +2121,13 @@ msgstr "Swap Iskorištenost"
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Switch theme"
-msgstr ""
+msgstr "Promijeni temu"
 
-#: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
-#: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1669,17 +2141,23 @@ msgstr "Sustav"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
-msgstr ""
+msgstr "Brzine ventilatora sustava (RPM)"
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "Prosječno opterećenje sustava kroz vrijeme"
+
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd servisi"
 
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Systems"
 msgstr "Sustavi"
 
@@ -1695,6 +2173,17 @@ msgstr "Tablica"
 msgctxt "Tabs system layout option"
 msgid "Tabs"
 msgstr "Kartice"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Target"
+msgstr "Cilj"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "target[,protocol[,port[,interval[,server]]]]"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
@@ -1743,6 +2232,7 @@ msgstr "Zatim se prijavite u backend i resetirajte lozinku korisničkog računa 
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "Ova radnja ne može se poništiti. Svi trenutni zapisi za {name} bit će trajno izbrisani iz baze podataka."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
 msgstr "Ovom radnjom će se trajno izbrisati svi odabrani zapisi iz baze podataka."
@@ -1751,13 +2241,9 @@ msgstr "Ovom radnjom će se trajno izbrisati svi odabrani zapisi iz baze podatak
 msgid "Throughput of {extraFsName}"
 msgstr "Protok {extraFsName}"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Throughput of root filesystem"
-msgstr "Protok root datotečnog sustava"
-
-#: src/components/routes/system/charts/zfs-charts.tsx
-msgid "Throughput of ZFS pool {poolName}"
-msgstr ""
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Throughput of storage pool {displayName}"
+msgstr "Protok spremišta {displayName}"
 
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
@@ -1771,6 +2257,15 @@ msgstr "Primaoci emaila"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Token"
 msgstr "Token"
+
+#. placeholder {0}: fingerprint.expand.system.name
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Token for {0}"
+msgstr "Token za {0}"
+
+#: src/components/token-value.tsx
+msgid "Token hidden"
+msgstr "Token je skriven"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1802,9 +2297,11 @@ msgstr "Ukupni podaci poslani za svako sučelje"
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O"
 msgid "Total time spent on read/write (can exceed 100%)"
-msgstr ""
+msgstr "Ukupno vrijeme utrošeno na čitanje/pisanje (može prelaziti 100 %)"
 
 #. placeholder {0}: data.length
+#. placeholder {0}: rows.length
+#: src/components/routes/system/package-updates-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Ukupno: {0}"
@@ -1830,12 +2327,24 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Pokreće se kada prosječna opterećenost sustava unutar 5 minuta prijeđe prag"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is missing for two consecutive checks"
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
 msgstr ""
+
+#: src/lib/alerts.ts
+msgid "Triggers when a container's health check reports unhealthy"
+msgstr "Aktivira se kada provjera stanja spremnika prijavi neispravno stanje"
+
+#: src/lib/alerts.ts
+msgid "Triggers when an HTTPS certificate nears expiration"
+msgstr "Aktivira se kada HTTPS certifikat uskoro istječe"
 
 #: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "Pokreće se kada bilo koji senzor prijeđe prag"
+
+#: src/lib/alerts.ts
+msgid "Triggers when any systemd service enters the failed state"
+msgstr "Aktivira se kada bilo koja systemd usluga prijeđe u stanje neuspjeha"
 
 #: src/lib/alerts.ts
 msgid "Triggers when battery charge drops below a threshold"
@@ -1844,6 +2353,14 @@ msgstr "Pokreće se kada razina baterije padne ispod praga"
 #: src/lib/alerts.ts
 msgid "Triggers when combined up/down exceeds a threshold"
 msgstr "Pokreće se kada kumulativna propusnost gore/dolje premaši prag"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU I/O wait exceeds a threshold"
+msgstr "Aktivira se kada CPU čekanje na U/I prijeđe prag"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU steal time exceeds a threshold"
+msgstr "Aktivira se kada ukradeno CPU vrijeme prijeđe prag"
 
 #: src/lib/alerts.ts
 msgid "Triggers when CPU usage exceeds a threshold"
@@ -1856,6 +2373,10 @@ msgstr "Pokreće se kada iskorištenost GPU-a premaši prag"
 #: src/lib/alerts.ts
 msgid "Triggers when memory usage exceeds a threshold"
 msgstr "Pokreće se kada iskorištenost memorije premaši prag"
+
+#: src/lib/alerts.ts
+msgid "Triggers when one hour loss exceeds a threshold"
+msgstr "Pokreće se kada jednosatni gubitak prijeđe prag"
 
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
@@ -1872,8 +2393,13 @@ msgstr "Pokreće se kada iskorištenost bilo kojeg diska premaši prag"
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Type"
 msgstr "Vrsta"
+
+#: src/lib/alerts.ts
+msgid "Unhealthy"
+msgstr "Nezdrav"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -1886,11 +2412,13 @@ msgstr "Opcije mjernih jedinica"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
+#: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Universal token"
 msgstr "Sveopći token"
 
 #. Context: Battery state
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "Nepoznato"
@@ -1910,13 +2438,20 @@ msgstr "Sustav je podignut"
 msgid "Up ({upSystemsLength})"
 msgstr "Sustav je podignut ({upSystemsLength})"
 
+#: src/components/routes/system/package-updates-table.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Up to date"
+msgstr "Ažurno"
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Update"
 msgstr "Ažuriraj"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/system/smart-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "Ažurirano"
@@ -1924,6 +2459,11 @@ msgstr "Ažurirano"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Updated every 10 minutes."
 msgstr "Ažurirano svakih 10 minuta."
+
+#: src/components/routes/system.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Updates"
+msgstr "Ažuriranja"
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Upload"
@@ -1935,27 +2475,28 @@ msgid "Uptime"
 msgstr "Vrijeme rada"
 
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
-#: src/components/routes/system/charts/zfs-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Iskorištenost"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Usage of root partition"
-msgstr "Iskorištenost root datotečnog sustava"
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Usage of storage pool {displayName}"
+msgstr "Iskorištenost spremišta {displayName}"
 
-#: src/components/routes/system/charts/zfs-charts.tsx
-msgid "Usage of ZFS pool {poolName}"
-msgstr ""
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Use for self-signed certificates."
+msgstr "Koristite za samopotpisane certifikate."
 
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "Iskorišteno"
 
@@ -1973,13 +2514,19 @@ msgstr "Iskorištenost"
 msgid "Value"
 msgstr "Vrijednost"
 
-#: src/components/routes/system/zfs-table.tsx
-msgid "Vdev"
-msgstr ""
-
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
 msgstr "Prikaz"
+
+#: src/components/active-alerts.tsx
+msgid "View alerts"
+msgstr "Prikaži upozorenja"
+
+#: src/components/alert-banner-sheet.tsx
+msgid "View details"
+msgstr "Prikaži detalje"
 
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
@@ -1991,10 +2538,12 @@ msgstr "Prikaži više"
 msgid "View your 200 most recent alerts."
 msgstr "Pogledajte posljednjih 200 upozorenja."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "Vidljiva polja"
 
+#: src/components/charts/chart-no-values.tsx
 #: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "Potrebno je više podataka za prikaz"
@@ -2027,6 +2576,10 @@ msgstr "Kada je omogućen, ovaj token omogućuje agentima da se sami registriraj
 msgid "When using POST, each heartbeat includes a JSON payload with system status summary, list of down systems, and triggered alerts."
 msgstr "Kada koristite POST, svaki heartbeat uključuje JSON payload sa sažetkom statusa sustava, popisom isključenih sustava i aktiviranim upozorenjima."
 
+#: src/components/routes/system/charts/wifi-chart.tsx
+msgid "Wi-Fi signal"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
@@ -2036,13 +2589,17 @@ msgstr "Windows naredba"
 #. Disk write
 #. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/zfs-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
-#: src/components/routes/system/zfs-table.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Write"
 msgstr "Piši"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Write errors"
+msgstr "Pogreške zapisivanja"
 
 #: src/components/routes/settings/layout.tsx
 msgid "YAML Config"
@@ -2061,7 +2618,3 @@ msgstr "Da"
 #: src/components/routes/settings/layout.tsx
 msgid "Your user settings have been updated."
 msgstr "Vaše korisničke postavke su ažurirane."
-
-#: src/components/routes/system/zfs-table.tsx
-msgid "ZFS Pool"
-msgstr ""

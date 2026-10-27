@@ -1,3 +1,5 @@
+//go:build testing
+
 package hub_test
 
 import (
@@ -6,12 +8,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"sort"
+	"strings"
 	"testing"
+	"time"
 
 	beszelTests "github.com/henrygd/beszel/internal/tests"
 
 	"github.com/henrygd/beszel/internal/migrations"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	pbTests "github.com/pocketbase/pocketbase/tests"
 	"github.com/stretchr/testify/require"
@@ -24,6 +31,59 @@ func jsonReader(v any) io.Reader {
 		panic(err)
 	}
 	return bytes.NewReader(data)
+}
+
+type gatedReader struct {
+	data    []byte
+	started chan struct{}
+	release chan struct{}
+	offset  int
+}
+
+func (r *gatedReader) Read(p []byte) (int, error) {
+	if r.offset == 0 {
+		close(r.started)
+		<-r.release
+	}
+	if r.offset >= len(r.data) {
+		return 0, io.EOF
+	}
+	n := copy(p, r.data[r.offset:])
+	r.offset += n
+	return n, nil
+}
+
+func firstUserTestMux(t *testing.T) (*beszelTests.TestHub, http.Handler) {
+	t.Helper()
+	hub, err := beszelTests.NewTestHub(t.TempDir())
+	require.NoError(t, err)
+	_ = hub.StartHub()
+
+	router, err := apis.NewRouter(hub.TestApp)
+	require.NoError(t, err)
+	serveEvent := &core.ServeEvent{App: hub.TestApp, Router: router}
+
+	var handler http.Handler
+	err = hub.TestApp.OnServe().Trigger(serveEvent, func(e *core.ServeEvent) error {
+		var buildErr error
+		handler, buildErr = e.Router.BuildMux()
+		return buildErr
+	})
+	require.NoError(t, err)
+	require.NotNil(t, handler)
+	return hub, handler
+}
+
+func postFirstUser(handler http.Handler, email string) *httptest.ResponseRecorder {
+	body, _ := json.Marshal(map[string]string{
+		"email":    email,
+		"password": "password123",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/beszel/create-user", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, req)
+	return recorder
 }
 
 func TestApiRoutesAuthentication(t *testing.T) {
@@ -42,6 +102,7 @@ func TestApiRoutesAuthentication(t *testing.T) {
 	adminUser, err := beszelTests.CreateUserWithRole(hub, "admin@example.com", "password123", "admin")
 	require.NoError(t, err, "Failed to create admin user")
 	adminUserToken, err := adminUser.NewAuthToken()
+	require.NoError(t, err, "Failed to create admin auth token")
 
 	readOnlyUser, err := beszelTests.CreateUserWithRole(hub, "readonly@example.com", "password123", "readonly")
 	require.NoError(t, err, "Failed to create readonly user")
@@ -491,6 +552,59 @@ func TestApiRoutesAuthentication(t *testing.T) {
 			ExpectedContent: []string{"Something went wrong while processing your request."},
 			TestAppFactory:  testAppFactory,
 		},
+		// /package-updates route
+		{
+			Name:            "GET /package-updates - no auth should fail",
+			Method:          http.MethodGet,
+			URL:             fmt.Sprintf("/api/beszel/package-updates?system=%s", system.Id),
+			ExpectedStatus:  401,
+			ExpectedContent: []string{"requires valid"},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "GET /package-updates - missing system param should fail",
+			Method: http.MethodGet,
+			URL:    "/api/beszel/package-updates",
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{"Invalid", "parameter"},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "GET /package-updates - invalid system should fail",
+			Method: http.MethodGet,
+			URL:    "/api/beszel/package-updates?system=invalid-system",
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{"The requested resource wasn't found."},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:            "GET /package-updates - request for valid non-user system should fail",
+			Method:          http.MethodGet,
+			URL:             fmt.Sprintf("/api/beszel/package-updates?system=%s", system.Id),
+			ExpectedStatus:  404,
+			ExpectedContent: []string{"The requested resource wasn't found."},
+			TestAppFactory:  testAppFactory,
+			Headers: map[string]string{
+				"Authorization": user2Token,
+			},
+		},
+		{
+			Name:   "GET /package-updates - good user should pass validation",
+			Method: http.MethodGet,
+			URL:    fmt.Sprintf("/api/beszel/package-updates?system=%s", system.Id),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  500,
+			ExpectedContent: []string{"Something went wrong while processing your request."},
+			TestAppFactory:  testAppFactory,
+		},
 		// /systemd routes
 		{
 			Name:            "GET /systemd/info - no auth should fail",
@@ -564,6 +678,25 @@ func TestApiRoutesAuthentication(t *testing.T) {
 			},
 			ExpectedStatus:  500,
 			ExpectedContent: []string{"Something went wrong while processing your request."},
+			TestAppFactory:  testAppFactory,
+			BeforeTestFunc: func(t testing.TB, app *pbTests.TestApp, e *core.ServeEvent) {
+				beszelTests.CreateRecord(app, "systemd_services", map[string]any{
+					"system": system.Id,
+					"name":   "nginx.service",
+					"state":  0,
+					"sub":    1,
+				})
+			},
+		},
+		{
+			Name:   "GET /systemd/logs - old agent without capability returns empty logs",
+			Method: http.MethodGet,
+			URL:    fmt.Sprintf("/api/beszel/systemd/logs?system=%s&service=nginx.service", system.Id),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"logs":""`},
 			TestAppFactory:  testAppFactory,
 			BeforeTestFunc: func(t testing.TB, app *pbTests.TestApp, e *core.ServeEvent) {
 				beszelTests.CreateRecord(app, "systemd_services", map[string]any{
@@ -664,17 +797,260 @@ func TestApiRoutesAuthentication(t *testing.T) {
 				"systems": []string{system.Id},
 			}),
 		},
-		// this works but diff behavior on prod vs dev.
-		// dev returns 502; prod returns 200 with static html page 404
-		// TODO: align dev and prod behavior and re-enable this test
-		// {
-		// 	Name:               "GET /update - shouldn't exist without CHECK_UPDATES env var",
-		// 	Method:             http.MethodGet,
-		// 	URL:                "/api/beszel/update",
-		// 	NotExpectedContent: []string{"v:", "\"v\":"},
-		// 	ExpectedStatus: 502,
-		// 	TestAppFactory: testAppFactory,
-		// },
+		{
+			Name:   "GET /update - shouldn't exist without CHECK_UPDATES env var",
+			Method: http.MethodGet,
+			URL:    "/api/beszel/update",
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			NotExpectedContent: []string{"v:", "\"v\":"},
+			ExpectedStatus:     404,
+			TestAppFactory:     testAppFactory,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestUniversalTokenEndpoint(t *testing.T) {
+	hub, user := beszelTests.GetHubWithUser(t)
+	defer hub.Cleanup()
+
+	userToken, err := user.NewAuthToken()
+	require.NoError(t, err, "Failed to create auth token")
+
+	otherUser, err := beszelTests.CreateUser(hub, "other@example.com", "password123")
+	require.NoError(t, err, "Failed to create other user")
+	otherUserToken, err := otherUser.NewAuthToken()
+	require.NoError(t, err, "Failed to create other user auth token")
+
+	readOnlyUser, err := beszelTests.CreateUserWithRole(hub, "readonly@example.com", "password123", "readonly")
+	require.NoError(t, err, "Failed to create readonly user")
+	readOnlyUserToken, err := readOnlyUser.NewAuthToken()
+	require.NoError(t, err, "Failed to create readonly user auth token")
+
+	superuser, err := beszelTests.CreateSuperuser(hub, "superuser@example.com", "password123")
+	require.NoError(t, err, "Failed to create superuser")
+	superuserToken, err := superuser.NewAuthToken()
+	require.NoError(t, err, "Failed to create superuser auth token")
+
+	testAppFactory := func(t testing.TB) *pbTests.TestApp {
+		return hub.TestApp
+	}
+
+	// token responses should never be cached
+	expectNoStore := func(t testing.TB, app *pbTests.TestApp, res *http.Response) {
+		require.Equal(t, "no-store", res.Header.Get("Cache-Control"))
+	}
+
+	// asserts whether the user has a permanent token record with the given token
+	expectPermanentRecord := func(userID, token string, exists bool) func(testing.TB, *pbTests.TestApp, *http.Response) {
+		return func(t testing.TB, app *pbTests.TestApp, res *http.Response) {
+			expectNoStore(t, app, res)
+			rec, err := app.FindFirstRecordByFilter("universal_tokens", "user = {:user}", dbx.Params{"user": userID})
+			if !exists {
+				require.Error(t, err, "Expected no permanent token record")
+				return
+			}
+			require.NoError(t, err, "Expected permanent token record")
+			require.Equal(t, token, rec.GetString("token"))
+		}
+	}
+
+	const path = "/api/beszel/universal-token"
+	const token = "post-universal-token-123"
+
+	// scenarios share app state and run in order
+	scenarios := []beszelTests.ApiScenario{
+		{
+			Name:            "POST /universal-token - no auth should fail",
+			Method:          http.MethodPost,
+			URL:             path,
+			Body:            jsonReader(map[string]any{"enable": 1}),
+			ExpectedStatus:  401,
+			ExpectedContent: []string{"requires valid"},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "POST /universal-token - readonly user should fail",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"enable": 1}),
+			Headers: map[string]string{
+				"Authorization": readOnlyUserToken,
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{"The authorized record is not allowed to perform this action."},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "POST /universal-token - superuser should fail",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"enable": 1}),
+			Headers: map[string]string{
+				"Authorization": superuserToken,
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{"Superusers cannot use universal tokens"},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectNoStore,
+		},
+		{
+			Name:   "POST /universal-token - invalid json should fail",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   strings.NewReader(`{`),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{"Invalid universal token request"},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectNoStore,
+		},
+		{
+			Name:   "POST /universal-token - non-numeric enable should fail",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"enable": "yes"}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{"Invalid universal token request"},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "POST /universal-token - enable ephemeral token",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"token": token, "enable": 1}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"` + token + `"`, `"active":true`, `"permanent":false`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectPermanentRecord(user.Id, "", false),
+		},
+		{
+			Name:   "POST /universal-token - empty body should read current state",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"` + token + `"`, `"active":true`, `"permanent":false`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectNoStore,
+		},
+		{
+			Name:   "POST /universal-token - make token permanent",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"token": token, "enable": 1, "permanent": 1}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"` + token + `"`, `"active":true`, `"permanent":true`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectPermanentRecord(user.Id, token, true),
+		},
+		{
+			Name:   "POST /universal-token - other user should not read token",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{}),
+			Headers: map[string]string{
+				"Authorization": otherUserToken,
+			},
+			ExpectedStatus:     200,
+			ExpectedContent:    []string{`"active":false`},
+			NotExpectedContent: []string{token},
+			TestAppFactory:     testAppFactory,
+		},
+		{
+			Name:   "POST /universal-token - other user should see token as inactive",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"token": token}),
+			Headers: map[string]string{
+				"Authorization": otherUserToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"` + token + `"`, `"active":false`},
+			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "POST /universal-token - other user should not disable token",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"enable": 0}),
+			Headers: map[string]string{
+				"Authorization": otherUserToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"active":false`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectPermanentRecord(user.Id, token, true),
+		},
+		{
+			Name:   "POST /universal-token - disable permanent token",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{"enable": 0}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"active":false`, `"permanent":false`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectPermanentRecord(user.Id, "", false),
+		},
+		{
+			Name:   "POST /universal-token - read after disable should be inactive",
+			Method: http.MethodPost,
+			URL:    path,
+			Body:   jsonReader(map[string]any{}),
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:     200,
+			ExpectedContent:    []string{`"active":false`, `"permanent":false`},
+			NotExpectedContent: []string{token},
+			TestAppFactory:     testAppFactory,
+		},
+		{
+			Name:   "GET /universal-token - legacy query params should still work",
+			Method: http.MethodGet,
+			URL:    path + "?enable=1&permanent=1&token=legacy-token-123",
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"legacy-token-123"`, `"active":true`, `"permanent":true`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectPermanentRecord(user.Id, "legacy-token-123", true),
+		},
+		{
+			Name:   "GET /universal-token - legacy read without query params",
+			Method: http.MethodGet,
+			URL:    path,
+			Headers: map[string]string{
+				"Authorization": userToken,
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{`"token":"legacy-token-123"`, `"active":true`, `"permanent":true`},
+			TestAppFactory:  testAppFactory,
+			AfterTestFunc:   expectNoStore,
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -786,6 +1162,87 @@ func TestFirstUserCreation(t *testing.T) {
 		}
 
 		scenario.Test(t)
+	})
+}
+
+func TestFirstUserBootstrapAtomicity(t *testing.T) {
+	t.Run("concurrent complete requests produce exactly one winner", func(t *testing.T) {
+		hub, handler := firstUserTestMux(t)
+		defer hub.Cleanup()
+
+		start := make(chan struct{})
+		statuses := make(chan int, 2)
+		for _, email := range []string{"first@example.com", "second@example.com"} {
+			go func(email string) {
+				<-start
+				statuses <- postFirstUser(handler, email).Code
+			}(email)
+		}
+		close(start)
+
+		got := []int{<-statuses, <-statuses}
+		sort.Ints(got)
+		require.Equal(t, []int{http.StatusOK, http.StatusForbidden}, got)
+
+		users, err := hub.FindAllRecords("users")
+		require.NoError(t, err)
+		require.Len(t, users, 1)
+		superusers, err := hub.FindAllRecords(core.CollectionNameSuperusers)
+		require.NoError(t, err)
+		require.Len(t, superusers, 1)
+		require.NotEqual(t, migrations.TempAdminEmail, superusers[0].Email())
+	})
+
+	t.Run("partial body cannot retain stale bootstrap authorization", func(t *testing.T) {
+		hub, handler := firstUserTestMux(t)
+		defer hub.Cleanup()
+
+		body, err := json.Marshal(map[string]string{
+			"email":    "parked@example.com",
+			"password": "password123",
+		})
+		require.NoError(t, err)
+		gated := &gatedReader{
+			data:    body,
+			started: make(chan struct{}),
+			release: make(chan struct{}),
+		}
+		parkedRequest := httptest.NewRequest(http.MethodPost, "/api/beszel/create-user", gated)
+		parkedRequest.Header.Set("Content-Type", "application/json")
+		parkedRecorder := httptest.NewRecorder()
+		parkedDone := make(chan struct{})
+		go func() {
+			handler.ServeHTTP(parkedRecorder, parkedRequest)
+			close(parkedDone)
+		}()
+
+		select {
+		case <-gated.started:
+		case <-time.After(2 * time.Second):
+			t.Fatal("parked request did not begin reading its body")
+		}
+
+		operatorRecorder := postFirstUser(handler, "operator@example.com")
+		require.Equal(t, http.StatusOK, operatorRecorder.Code)
+		lateRecorder := postFirstUser(handler, "late@example.com")
+		require.Equal(t, http.StatusForbidden, lateRecorder.Code)
+
+		close(gated.release)
+		select {
+		case <-parkedDone:
+		case <-time.After(2 * time.Second):
+			t.Fatal("parked request did not finish")
+		}
+		require.Equal(t, http.StatusForbidden, parkedRecorder.Code)
+
+		users, err := hub.FindAllRecords("users")
+		require.NoError(t, err)
+		require.Len(t, users, 1)
+		require.Equal(t, "operator@example.com", users[0].Email())
+		superusers, err := hub.FindAllRecords(core.CollectionNameSuperusers)
+		require.NoError(t, err)
+		require.Len(t, superusers, 1)
+		require.Equal(t, "operator@example.com", superusers[0].Email())
 	})
 }
 
@@ -966,6 +1423,79 @@ func TestTrustedHeaderMiddleware(t *testing.T) {
 
 	for _, scenario := range scenarios {
 		scenario.Test(t)
+	}
+}
+
+func TestTrustedHeaderProxyAllowlist(t *testing.T) {
+	var hubs []*beszelTests.TestHub
+
+	defer func() {
+		for _, hub := range hubs {
+			hub.Cleanup()
+		}
+	}()
+
+	testAppFactory := func(t testing.TB) *pbTests.TestApp {
+		hub, _ := beszelTests.NewTestHub(t.TempDir())
+		hubs = append(hubs, hub)
+		hub.StartHub()
+		return hub.TestApp
+	}
+
+	// httptest requests arrive from 192.0.2.1:1234
+	testCases := []struct {
+		name            string
+		proxies         string
+		expectedStatus  int
+		expectedContent []string
+	}{
+		{
+			name:            "peer inside an allowed range",
+			proxies:         "10.0.0.0/8, 192.0.2.0/24",
+			expectedStatus:  200,
+			expectedContent: []string{"\"key\":", "\"v\":"},
+		},
+		{
+			name:            "peer is the listed address",
+			proxies:         "192.0.2.1",
+			expectedStatus:  200,
+			expectedContent: []string{"\"key\":", "\"v\":"},
+		},
+		{
+			name:            "peer outside the allowlist",
+			proxies:         "10.0.0.0/8",
+			expectedStatus:  401,
+			expectedContent: []string{"requires valid"},
+		},
+		{
+			name:            "allowlist with no valid entry",
+			proxies:         "proxy.internal",
+			expectedStatus:  401,
+			expectedContent: []string{"requires valid"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("TRUSTED_AUTH_HEADER", "X-Beszel-Trusted")
+			t.Setenv("TRUSTED_PROXY_IPS", tc.proxies)
+
+			scenario := beszelTests.ApiScenario{
+				Name:   "GET /getkey - with trusted header",
+				Method: http.MethodGet,
+				URL:    "/api/beszel/getkey",
+				Headers: map[string]string{
+					"X-Beszel-Trusted": "user@test.com",
+				},
+				ExpectedStatus:  tc.expectedStatus,
+				ExpectedContent: tc.expectedContent,
+				TestAppFactory:  testAppFactory,
+				BeforeTestFunc: func(t testing.TB, app *pbTests.TestApp, e *core.ServeEvent) {
+					beszelTests.CreateUser(app, "user@test.com", "password123")
+				},
+			}
+			scenario.Test(t)
+		})
 	}
 }
 

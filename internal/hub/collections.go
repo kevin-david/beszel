@@ -78,21 +78,39 @@ func setCollectionAuthSettings(app core.App) error {
 		return err
 	}
 
-	if err := applyCollectionRules(app, []string{"containers", "container_stats", "system_stats", "systemd_services"}, collectionRules{
+	if err := applyCollectionRules(app, []string{"containers", "container_stats", "system_stats", "systemd_services", "network_monitor_stats"}, collectionRules{
 		list: &systemScopedReadRule,
 	}); err != nil {
 		return err
 	}
 
-	if err := applyCollectionRules(app, []string{"smart_devices", "zfs_pools"}, collectionRules{
+	if err := applyCollectionRules(app, []string{"smart_devices"}, collectionRules{
 		list:   &systemScopedReadRule,
 		view:   &systemScopedReadRule,
 		delete: &systemScopedWriteRule,
 	}); err != nil {
 		return err
 	}
+	if err := applyCollectionRules(app, []string{"zfs_pools"}, collectionRules{
+		list: &systemScopedReadRule,
+		view: &systemScopedReadRule,
+	}); err != nil {
+		return err
+	}
 
+	// The system of an existing fingerprint cannot be changed through the API.
+	fingerprintsUpdateRule := systemScopedWriteRule + " && @request.body.system:changed = false"
 	if err := applyCollectionRules(app, []string{"fingerprints"}, collectionRules{
+		list:   &systemScopedWriteRule,
+		view:   &systemScopedWriteRule,
+		create: &systemScopedWriteRule,
+		update: &fingerprintsUpdateRule,
+		delete: &systemScopedWriteRule,
+	}); err != nil {
+		return err
+	}
+
+	if err := applyCollectionRules(app, []string{"network_monitors"}, collectionRules{
 		list:   &systemScopedReadRule,
 		view:   &systemScopedReadRule,
 		create: &systemScopedWriteRule,
@@ -102,9 +120,49 @@ func setCollectionAuthSettings(app core.App) error {
 		return err
 	}
 
+	// Alerts belong to their user and may only reference systems the user can access.
+	// The user and system of an existing alert cannot be changed through the API.
+	// Readonly users can still manage their own alerts, so these build on the read rule.
+	alertsOwnerRule := authenticatedRule + " && user = @request.auth.id"
+	alertsCreateRule := alertsOwnerRule
+	alertsUpdateRule := alertsOwnerRule + " && @request.body.user:changed = false && @request.body.system:changed = false"
+	if shareAllSystems != "true" {
+		alertsCreateRule += " && system.users.id ?= @request.auth.id"
+		alertsUpdateRule += " && system.users.id ?= @request.auth.id"
+	}
+	if err := applyCollectionRules(app, []string{"alerts"}, collectionRules{
+		list:   &alertsOwnerRule,
+		create: &alertsCreateRule,
+		update: &alertsUpdateRule,
+		delete: &alertsOwnerRule,
+	}); err != nil {
+		return err
+	}
+
 	if err := applyCollectionRules(app, []string{"system_details"}, collectionRules{
 		list: &systemScopedReadRule,
 		view: &systemScopedReadRule,
+	}); err != nil {
+		return err
+	}
+
+	// User settings and quiet hours belong to their user, and the user of an
+	// existing record cannot be changed through the API.
+	userOwnedRule := authenticatedRule + " && user = @request.auth.id"
+	userOwnedUpdateRule := userOwnedRule + " && @request.body.user:changed = false"
+	if err := applyCollectionRules(app, []string{"user_settings"}, collectionRules{
+		list:   &userOwnedRule,
+		create: &userOwnedRule,
+		update: &userOwnedUpdateRule,
+	}); err != nil {
+		return err
+	}
+	if err := applyCollectionRules(app, []string{"quiet_hours"}, collectionRules{
+		list:   &userOwnedRule,
+		view:   &userOwnedRule,
+		create: &userOwnedRule,
+		update: &userOwnedUpdateRule,
+		delete: &userOwnedRule,
 	}); err != nil {
 		return err
 	}
