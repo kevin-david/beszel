@@ -23,9 +23,14 @@ candidate uses upstream's charts. Do not deploy before that choice is answered.
   readings followed by recovery.
 - The two numeric system-alert tests pass after limiting previous-state parsing
   to the uptime and filesystem fields it actually uses.
-- A copied-data migration boot retained monitored systems, configured alerts,
-  history rows, SMART devices, and ZFS records. SQLite integrity and both custom
-  select options passed. The final candidate still needs this check repeated.
+- The final candidate at `e7eb0b89` booted a private copy of live data and
+  retained monitored systems, configured alerts, history rows, SMART devices,
+  and ZFS records. SQLite integrity and both custom select options passed.
+- Candidate image: `beszel-fork:0.21.1-kd.1-2026-10-27-e7eb0b89`, image ID
+  `sha256:ca7ee1002fbfd735cde9cf9b800a8e293a4bbf275771a5b3183b053b96f0db3d`.
+- Validation directory: `/home/kevin/beszel/validation-2026-10-27-0.21.1-kd.1-e7eb0b89`.
+  The host agent binary is `build/beszel-agent_linux_amd64` and reports
+  `0.21.1-kd.1`.
 - The broad system-manager suite crashes in SSH authentication on both the
   candidate and an `upstream/main` checkout. The broad agent suite
   also reported a lifecycle test port-binding failure. Neither is a full pass.
@@ -34,8 +39,8 @@ candidate uses upstream's charts. Do not deploy before that choice is answered.
 
 1. Apply the chart choice. If preserving dataset history, add its telemetry and
    averaging at fork-only CBOR field numbers and adapt the current pool charts.
-2. Review the final diff. Build the final hub image and host agent. Repeat the
-   copied-data check with the final image.
+2. If the chart choice changes code, rebuild the hub and host agent and repeat
+   the copied-data check. Otherwise the candidate above is ready for rollout.
 3. Before deployment, save the current image identity, agent binary, Compose
    file, and a consistent complete data backup. Keep credentials private.
 4. Deploy the compatibility-capable hub first, then replace the host agent.
