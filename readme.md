@@ -57,9 +57,7 @@ The [quick start guide](https://beszel.dev/guide/getting-started) and other docu
 - **S.M.A.R.T.** - Host system disk health (includes eMMC wear/EOL and Linux mdraid array health via sysfs when available).
 - **ZFS** - Pool capacity, usage, health, I/O throughput, scrub status, and per-dataset usage.
 
-## Help and discussion
-
-### Kevin's fork
+## Kevin's fork
 
 The fork adds reboot alerts and alerts for configured filesystems missing from
 two consecutive samples. It accepts the older fork agents' CBOR field numbers
@@ -71,8 +69,16 @@ as root with the live data path, candidate image, and a new private output
 directory. It tests migrations on SQLite backups with networking disabled.
 The validation copy is not a deployment rollback backup.
 
+`supplemental/scripts/deploy-fork.sh` deploys a validated image and host agent
+with a stopped-data backup. Its `--rollback BACKUP_DIRECTORY` mode restores
+the saved image identity, data, and agent together. For local alert settings,
+build `./internal/cmd/fork-config` and run it with `--offline` and an absolute
+`--data-dir` while the hub is stopped. Restart the hub after saving settings.
+
 The hub Dockerfile pins Go to the version in `go.mod`. Fork image publication
 uses `.github/workflows/fork-docker-images.yml`.
+
+## Help and discussion
 
 Please search existing issues and discussions before opening a new one. I try my best to respond, but may not always have time to do so.
 
