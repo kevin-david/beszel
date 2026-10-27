@@ -87,7 +87,7 @@ func newZfsBackend() *poolBackend {
 	return &poolBackend{
 		name:           "zfs",
 		poolStatsFn:    optionalPoolSource(zfs.PoolStats),
-		datasetsFn:     optionalPoolSource(zfs.Datasets),
+		datasetsFn:     zfs.Datasets,
 		kernelStatsFn:  optionalPoolSource(zfs.PoolKernelStats),
 		poolStatusesFn: optionalPoolSource(zfs.PoolStatuses),
 	}

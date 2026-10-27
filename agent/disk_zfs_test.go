@@ -37,6 +37,17 @@ func TestFailedDatasetUsageDoesNotPublishStaleOrStatfsCapacity(t *testing.T) {
 	assert.Equal(t, 50.0, stats.DiskPct)
 }
 
+func TestObservedZfsMountSurvivesMissingUtility(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	b := newZfsBackend()
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/tank", Used: 10, Avail: 30}}, nil)
+	datasets, err := b.datasets()
+	require.Error(t, err, "the real backend must preserve missing utility or interface errors")
+	b.storeDatasetUsage(datasets, err)
+	require.Contains(t, b.datasetUsage, "/tank")
+	assert.True(t, b.datasetUsage["/tank"].unavailable)
+}
+
 // TestUpdateDiskUsageZfsMountpoint verifies that a filesystem whose mountpoint
 // is a ZFS dataset reports `zfs list` usage (which includes child datasets)
 // instead of the dataset-scoped statfs values (#1541).
