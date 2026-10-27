@@ -86,7 +86,7 @@ func newStoragePoolManager() *StoragePoolManager {
 func newZfsBackend() *poolBackend {
 	return &poolBackend{
 		name:           "zfs",
-		poolStatsFn:    optionalPoolSource(zfs.PoolStats),
+		poolStatsFn:    zfs.PoolStats,
 		datasetsFn:     zfs.Datasets,
 		kernelStatsFn:  optionalPoolSource(zfs.PoolKernelStats),
 		poolStatusesFn: optionalPoolSource(zfs.PoolStatuses),
@@ -355,7 +355,13 @@ func (b *poolBackend) getBackendDetail(force bool, interval time.Duration) *zfse
 
 // collectDetail builds a ZfsData payload from the current system state.
 func (b *poolBackend) collectDetail(previous *zfsentity.ZfsData) (*zfsentity.ZfsData, error) {
-	pools, err := b.poolStatsFn()
+	poolStats := b.poolStatsFn
+	if previous == nil || len(previous.Pools) == 0 {
+		// A backend absent on first observation is optional. Once observed,
+		// losing its collector must not authorize deletion of saved pools.
+		poolStats = optionalPoolSource(poolStats)
+	}
+	pools, err := poolStats()
 	if err != nil {
 		return nil, err
 	}

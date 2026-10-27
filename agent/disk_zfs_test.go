@@ -9,6 +9,7 @@ import (
 
 	"github.com/henrygd/beszel/agent/zfs"
 	"github.com/henrygd/beszel/internal/entities/system"
+	zfsentity "github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,6 +47,20 @@ func TestObservedZfsMountSurvivesMissingUtility(t *testing.T) {
 	b.storeDatasetUsage(datasets, err)
 	require.Contains(t, b.datasetUsage, "/tank")
 	assert.True(t, b.datasetUsage["/tank"].unavailable)
+}
+
+func TestObservedZfsInventoryCannotDisappearWhenUtilityIsMissing(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	b := newZfsBackend()
+	previous := &zfsentity.ZfsData{Complete: true, Pools: []*zfsentity.PoolDetail{{Name: "tank"}}}
+	detail, err := b.collectDetail(previous)
+	require.Error(t, err)
+	assert.Nil(t, detail, "a collector failure cannot authorize deleting known pools")
+
+	detail, err = b.collectDetail(nil)
+	require.NoError(t, err, "startup without ZFS remains supported")
+	assert.True(t, detail.Complete)
+	assert.Empty(t, detail.Pools)
 }
 
 // TestUpdateDiskUsageZfsMountpoint verifies that a filesystem whose mountpoint

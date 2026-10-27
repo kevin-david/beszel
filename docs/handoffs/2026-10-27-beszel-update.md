@@ -27,7 +27,7 @@ candidate uses upstream's charts. Do not deploy before that choice is answered.
   history rows, SMART devices, and ZFS records. SQLite integrity and both custom
   select options passed. The final candidate still needs this check repeated.
 - The broad system-manager suite crashes in SSH authentication on both the
-  candidate and an untouched `upstream/main` checkout. The broad agent suite
+  candidate and an `upstream/main` checkout. The broad agent suite
   also reported a lifecycle test port-binding failure. Neither is a full pass.
 
 ## Next steps
@@ -44,5 +44,5 @@ candidate uses upstream's charts. Do not deploy before that choice is answered.
 5. Verify the serving revision, fresh host samples, both custom alert records,
    and all live ZFS pools with refreshed dataset details. Roll back the hub
    image, data, and agent binary together if verification fails.
-6. Add the agreed memory warning, then settle and implement Frigate recovery.
+6. Add the agreed memory warning, then choose and implement Frigate recovery.
    No alert configuration or automatic restart has been installed yet.
