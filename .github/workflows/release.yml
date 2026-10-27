@@ -26,10 +26,13 @@ jobs:
       - name: Build site
         run: bun run --cwd ./internal/site build
 
+      - name: Restore generated localization catalogs
+        run: git restore internal/site/src/locales
+
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: stable
+          go-version-file: go.mod
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v6

@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro"
-import { ContainerIcon, CpuIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon } from "lucide-react"
+import { ContainerIcon, CpuIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, RotateCcwIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon } from "lucide-react"
 import type { RecordSubscription } from "pocketbase"
 import { EthernetIcon, GpuIcon } from "@/components/ui/icons"
 import { $alerts } from "@/lib/stores"
@@ -9,6 +9,24 @@ import { ThermometerIcon, BatteryMediumIcon, HourglassIcon } from "@/components/
 
 /** Alert info for each alert type */
 export const alertInfo: Record<string, AlertInfo> = {
+  Reboot: {
+    name: () => t`Reboot`,
+    unit: "",
+    icon: RotateCcwIcon,
+    desc: () => t`Triggers when the system restarts`,
+    triggeredDesc: () => t`System restarted`,
+    noDuration: true,
+    noThreshold: true,
+  },
+  Filesystem: {
+    name: () => t`Filesystem Availability`,
+    unit: "",
+    icon: HardDriveIcon,
+    desc: () => t`Triggers when a configured filesystem is unavailable for two consecutive checks`,
+    triggeredDesc: () => t`One or more configured filesystems are unavailable`,
+    noDuration: true,
+    noThreshold: true,
+  },
   Status: {
     name: () => t`Status`,
     unit: "",

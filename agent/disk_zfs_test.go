@@ -3,6 +3,7 @@
 package agent
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -12,6 +13,29 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestFailedDatasetUsageDoesNotPublishStaleOrStatfsCapacity(t *testing.T) {
+	b := &poolBackend{name: "zfs"}
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/", Used: 10, Avail: 30}}, nil)
+	m := &StoragePoolManager{backends: []*poolBackend{b}}
+	a := &Agent{fsStats: map[string]*system.FsStats{"root": {Root: true, Mountpoint: "/"}}, storagePoolManager: m}
+	var stats system.Stats
+	a.updateDiskUsage(&stats)
+	assert.Equal(t, 25.0, stats.DiskPct)
+
+	previous := b.datasetUsage
+	b.storeDatasetUsage(nil, errors.New("zfs collector failed"))
+	a.updateDiskUsage(&stats)
+	assert.True(t, b.datasetUsage["/"].unavailable)
+	assert.Equal(t, uint64(10), previous["/"].used, "published cache references must not be mutated")
+	assert.Zero(t, stats.DiskTotal)
+	assert.Zero(t, stats.DiskUsed)
+	assert.Zero(t, stats.DiskPct)
+
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/", Used: 20, Avail: 20}}, nil)
+	a.updateDiskUsage(&stats)
+	assert.Equal(t, 50.0, stats.DiskPct)
+}
 
 // TestUpdateDiskUsageZfsMountpoint verifies that a filesystem whose mountpoint
 // is a ZFS dataset reports `zfs list` usage (which includes child datasets)

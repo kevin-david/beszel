@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/fxamacker/cbor/v2"
+
 	"github.com/henrygd/beszel/internal/entities/container"
 	"github.com/henrygd/beszel/internal/entities/monitor"
 	"github.com/henrygd/beszel/internal/entities/systemd"
@@ -116,6 +118,9 @@ type GPUData struct {
 }
 
 type FsStats struct {
+	Setting           string     `json:"-" cbor:"-"`
+	Expected          bool       `json:"-" cbor:"-"`
+	Available         bool       `json:"-" cbor:"-"`
 	Root              bool       `json:"-"`
 	Mountpoint        string     `json:"-"`
 	Name              string     `json:"-"`
@@ -187,6 +192,34 @@ type Info struct {
 	PackageUpdates []uint16           `json:"pu,omitempty" cbor:"25,keyasint,omitempty"`  // [totalUpdates, securityUpdates] (security omitted if unknown)
 	WiFi           map[string]WiFi    `json:"wf,omitempty" cbor:"26,keyasint,omitempty"`  // connected Wi-Fi interfaces
 	SystemdLogs    bool               `json:"jl,omitzero" cbor:"27,keyasint,omitempty"`   // agent can read the system journal
+	// Fork extension; key 25 was used before upstream assigned it to PackageUpdates.
+	ExtraFsAvailable map[string]bool `json:"efa,omitzero" cbor:"1000,keyasint"`
+	ExtraFsMissing   []string        `json:"efm,omitempty" cbor:"-"`
+}
+
+// UnmarshalCBOR accepts filesystem availability from the deployed 0.18 fork
+// without confusing its map at key 25 with upstream's package-update array.
+func (info *Info) UnmarshalCBOR(data []byte) error {
+	const legacyAvailabilityKey = 25
+	const availabilityKey = 1000
+	const cborMapMajorType = 5
+	var fields map[uint64]cbor.RawMessage
+	if err := cbor.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+	if legacy := fields[legacyAvailabilityKey]; len(legacy) > 0 && legacy[0]>>5 == cborMapMajorType {
+		if _, present := fields[availabilityKey]; !present {
+			fields[availabilityKey] = legacy
+		}
+		delete(fields, legacyAvailabilityKey)
+		var err error
+		data, err = cbor.Marshal(fields)
+		if err != nil {
+			return err
+		}
+	}
+	type plainInfo Info
+	return cbor.Unmarshal(data, (*plainInfo)(info))
 }
 
 // Data that does not change during process lifetime and is not needed in All Systems table

@@ -1061,6 +1061,10 @@ msgstr "失败: {0}"
 msgid "Fans"
 msgstr "风扇"
 
+#: src/lib/alerts.ts
+msgid "Filesystem Availability"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1538,6 +1542,10 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "一个或多个证书将在 {0, plural, one {# 天} other {# 天}}内到期"
 
 #: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "一个或多个容器处于不健康状态"
 
@@ -1804,6 +1812,10 @@ msgstr "读取"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "读取错误"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2135,6 +2147,10 @@ msgstr "系统风扇速度（RPM）"
 msgid "System load averages over time"
 msgstr "系统负载平均值随时间变化"
 
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd 服务"
@@ -2311,6 +2327,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "当 5 分钟内的平均负载超过阈值时触发"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "当容器健康检查报告为不健康时触发"
 
@@ -2361,6 +2381,10 @@ msgstr "当一小时丢包率超过阈值时触发"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "当状态在上线与掉线之间切换时触发"
+
+#: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

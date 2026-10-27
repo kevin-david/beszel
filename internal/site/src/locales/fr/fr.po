@@ -1061,6 +1061,10 @@ msgstr "Échec : {0}"
 msgid "Fans"
 msgstr "Ventilateurs"
 
+#: src/lib/alerts.ts
+msgid "Filesystem Availability"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1538,6 +1542,10 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Un ou plusieurs certificats expirent dans {0, plural, one {# jour} other {# jours}}"
 
 #: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Un ou plusieurs conteneurs sont défaillants"
 
@@ -1804,6 +1812,10 @@ msgstr "Lecture"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Erreurs de lecture"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2135,6 +2147,10 @@ msgstr "Vitesses des ventilateurs du système (RPM)"
 msgid "System load averages over time"
 msgstr "Charges moyennes du système dans le temps"
 
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Services systemd"
@@ -2311,6 +2327,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Se déclenche lorsque la charge moyenne sur 5 minutes dépasse un seuil"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Se déclenche lorsqu’un contrôle d’intégrité d’un conteneur signale un état défaillant"
 
@@ -2361,6 +2381,10 @@ msgstr "Se déclenche lorsque la perte sur une heure dépasse un seuil"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Se déclenche lorsque le statut passe de \"Joignable\" à \"Injoignable\""
+
+#: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

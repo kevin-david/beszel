@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.2-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ ARG TARGETOS TARGETARCH TARGETVARIANT
 RUN if [ "$TARGETARCH" = "arm" ] && [ -n "$TARGETVARIANT" ]; then \
     export GOARM="${TARGETVARIANT#v}"; \
   fi; \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-w -s" -o /beszel ./internal/cmd/hub
+  CGO_ENABLED=0 GOGC=75 GOMAXPROCS=2 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -p 2 -ldflags "-w -s" -o /beszel ./internal/cmd/hub
 
 # ? -------------------------
 FROM scratch

@@ -1061,6 +1061,10 @@ msgstr "Неуспело: {0}"
 msgid "Fans"
 msgstr "Вентилатори"
 
+#: src/lib/alerts.ts
+msgid "Filesystem Availability"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1538,6 +1542,10 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Један или више сертификата истиче у року од {0, plural, one {# дан} few {# дана} other {# дана}}"
 
 #: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Један или више контејнера је у нездравом стању"
 
@@ -1804,6 +1812,10 @@ msgstr "Читање"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Грешке при читању"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2135,6 +2147,10 @@ msgstr "Брзине вентилатора система (RPM)"
 msgid "System load averages over time"
 msgstr "Просечна оптерећења система током времена"
 
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd сервиси"
@@ -2311,6 +2327,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Окида се када просечно оптерећење од 5 минута премаши праг"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Активира се када провера стања контејнера пријави нездраво стање"
 
@@ -2361,6 +2381,10 @@ msgstr "Aktivira se kada gubitak tokom jednog sata pređe prag"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Окида се када статус прелази између укљученог и искљученог"
+
+#: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

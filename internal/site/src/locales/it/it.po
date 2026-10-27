@@ -1061,6 +1061,10 @@ msgstr "Fallito: {0}"
 msgid "Fans"
 msgstr "Ventole"
 
+#: src/lib/alerts.ts
+msgid "Filesystem Availability"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1538,6 +1542,10 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Uno o più certificati scadono entro {0, plural, one {# giorno} other {# giorni}}"
 
 #: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Uno o più container non sono integri"
 
@@ -1804,6 +1812,10 @@ msgstr "Lettura"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Errori di lettura"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2135,6 +2147,10 @@ msgstr "Velocità delle ventole di sistema (RPM)"
 msgid "System load averages over time"
 msgstr "Medie di carico del sistema nel tempo"
 
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Servizi Systemd"
@@ -2311,6 +2327,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Si attiva quando la media di carico di 5 minuti supera una soglia"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Si attiva quando il controllo di integrità di un container segnala uno stato non integro"
 
@@ -2361,6 +2381,10 @@ msgstr "Si attiva quando la perdita di un’ora supera una soglia"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Attiva quando lo stato passa tra up e down"
+
+#: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

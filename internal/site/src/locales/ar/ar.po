@@ -1061,6 +1061,10 @@ msgstr "فشل: {0}"
 msgid "Fans"
 msgstr "المراوح"
 
+#: src/lib/alerts.ts
+msgid "Filesystem Availability"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1538,6 +1542,10 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "تنتهي صلاحية شهادة واحدة أو أكثر خلال {0, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}"
 
 #: src/lib/alerts.ts
+msgid "One or more configured filesystems are unavailable"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "حاوية واحدة أو أكثر غير سليمة"
 
@@ -1804,6 +1812,10 @@ msgstr "قراءة"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "أخطاء القراءة"
+
+#: src/lib/alerts.ts
+msgid "Reboot"
+msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2135,6 +2147,10 @@ msgstr "سرعات مراوح النظام (RPM)"
 msgid "System load averages over time"
 msgstr "متوسط تحميل النظام مع مرور الوقت"
 
+#: src/lib/alerts.ts
+msgid "System restarted"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "خدمات systemd"
@@ -2311,6 +2327,10 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "يتم التفعيل عندما يتجاوز متوسط التحميل لمدة 5 دقائق عتبة معينة"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
+msgstr ""
+
+#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "يتم تشغيله عندما يفيد فحص صحة الحاوية بأنها غير سليمة"
 
@@ -2361,6 +2381,10 @@ msgstr "يتم التفعيل عندما يتجاوز فقدان الساعة ا
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "يتم التفعيل عندما يتغير الحالة بين التشغيل والإيقاف"
+
+#: src/lib/alerts.ts
+msgid "Triggers when the system restarts"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

@@ -186,7 +186,7 @@ export default function AlertsHistoryDataTable() {
 		const cells: Record<string, (record: AlertsHistoryRecord) => string> = {
 			system: (record) => record.expand?.system?.name || record.system,
 			name: (record) => [alertInfo[record.name]?.name() || record.name, record.monitor_name].filter(Boolean).join(": "),
-			value: (record) => record.value + (alertInfo[record.name]?.unit ?? ""),
+			value: (record) => alertInfo[record.name]?.noThreshold ? "" : record.value + (alertInfo[record.name]?.unit ?? ""),
 			state: (record) => (record.resolved ? t`Resolved` : t`Active`),
 			created: (record) => formatShortDate(record.created),
 			resolved: (record) => (record.resolved ? formatShortDate(record.resolved) : ""),

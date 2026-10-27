@@ -59,6 +59,21 @@ The [quick start guide](https://beszel.dev/guide/getting-started) and other docu
 
 ## Help and discussion
 
+### Kevin's fork
+
+The fork adds reboot alerts and alerts for configured filesystems missing from
+two consecutive samples. It accepts the older fork agents' CBOR field numbers
+alongside upstream agents. Update the hub before the agent; rollback requires
+restoring the old hub data and agent binary together.
+
+Before deploying an update, run `supplemental/scripts/verify-fork-upgrade.sh`
+as root with the live data path, candidate image, and a new private output
+directory. It tests migrations on SQLite backups with networking disabled.
+The validation copy is not a deployment rollback backup.
+
+The hub Dockerfile pins Go to the version in `go.mod`. Fork image publication
+uses `.github/workflows/fork-docker-images.yml`.
+
 Please search existing issues and discussions before opening a new one. I try my best to respond, but may not always have time to do so.
 
 #### Bug reports and feature requests

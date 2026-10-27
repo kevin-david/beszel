@@ -30,6 +30,8 @@ func (stubHub) HandleSystemAlerts(systemRecord *core.Record, data *esystem.Combi
 	return nil
 }
 func (stubHub) HandleNetworkMonitorAlerts(*core.Record, map[string]monitor.Result) error { return nil }
+func (stubHub) HandleRebootAlert(*core.Record) error                                     { return nil }
+func (stubHub) HandleFilesystemAlert(*core.Record, []string, []string, bool) error       { return nil }
 func (stubHub) HandleStatusAlerts(status string, systemRecord *core.Record) error        { return nil }
 func (stubHub) HandleContainerAlerts(systemRecord *core.Record, data *esystem.CombinedData, fetchLogs func(containerID string) (string, error)) error {
 	return nil
