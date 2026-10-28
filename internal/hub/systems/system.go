@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math/rand"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -265,7 +267,16 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 	}
 	hub := sys.manager.hub
 	savedMonitorProbes := make(map[string]int64)
+	var previousInfo struct {
+		Uptime           uint64          `json:"u"`
+		ExtraFsAvailable map[string]bool `json:"efa"`
+		ExtraFsMissing   []string        `json:"efm"`
+	}
 	err = hub.RunInTransaction(func(txApp core.App) error {
+		if err := systemRecord.UnmarshalJSONField("info", &previousInfo); err != nil {
+			return err
+		}
+		data.Info.ExtraFsMissing = reconcileFilesystemState(previousInfo.ExtraFsAvailable, data.Info.ExtraFsAvailable, previousInfo.ExtraFsMissing)
 		// add system_stats record
 		systemStatsCollection, err := txApp.FindCachedCollectionByNameOrId("system_stats")
 		if err != nil {
@@ -365,11 +376,54 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 		}
 	}
 	if err == nil {
+		if rebootedFromUptime(previousInfo.Uptime, data.Info.Uptime) {
+			if alertErr := hub.HandleRebootAlert(systemRecord); alertErr != nil {
+				hub.Logger().Error("Error handling reboot alert", "err", alertErr)
+			}
+		}
+		if alertErr := hub.HandleFilesystemAlert(systemRecord, previousInfo.ExtraFsMissing, data.Info.ExtraFsMissing, data.Info.ExtraFsAvailable != nil); alertErr != nil {
+			hub.Logger().Error("Error handling filesystem alert", "err", alertErr)
+		}
 		if alertErr := hub.HandleNetworkMonitorAlerts(systemRecord, data.Monitors); alertErr != nil {
 			hub.Logger().Error("Error handling network monitor alerts", "err", alertErr)
 		}
 	}
 	return systemRecord, err
+}
+
+const (
+	// Ignore small wall-clock adjustments in platforms with non-monotonic uptime.
+	rebootUptimeTolerance uint64 = 2 * uint64(interval/1000)
+	maxPlausibleUptime    uint64 = 100 * 365 * 24 * 60 * 60
+)
+
+func rebootedFromUptime(previous, current uint64) bool {
+	if current == 0 || current > maxPlausibleUptime || previous > maxPlausibleUptime {
+		return false
+	}
+	return previous > current && previous-current > rebootUptimeTolerance
+}
+
+func reconcileFilesystemState(previous, current map[string]bool, previousMissing []string) []string {
+	if current == nil {
+		return slices.Clone(previousMissing)
+	}
+	missing := make([]string, 0, len(current))
+	if previous == nil {
+		for _, name := range previousMissing {
+			if available, exists := current[name]; exists && !available {
+				missing = append(missing, name)
+			}
+		}
+	} else {
+		for name, available := range current {
+			if wasAvailable, observed := previous[name]; !available && observed && !wasAvailable {
+				missing = append(missing, name)
+			}
+		}
+	}
+	sort.Strings(missing)
+	return missing
 }
 
 func createSystemDetailsRecord(app core.App, data *system.Details, systemId string) error {

@@ -278,8 +278,15 @@ func findPartitionByFilesystemSetting(filesystem string, partitions []disk.Parti
 // addConfiguredExtraFsEntry resolves one EXTRA_FILESYSTEMS entry, preferring a
 // discovered partition and falling back to any path that disk.Usage accepts.
 func (d *diskDiscovery) addConfiguredExtraFsEntry(filesystem, customName string) {
+	if filesystem == "" {
+		return
+	}
 	if p, found := findPartitionByFilesystemSetting(filesystem, d.partitions); found {
-		d.addFsStat(p.Device, p.Mountpoint, false, customName)
+		key, stats, ok := registerFilesystemStats(d.agent.fsStats, p.Device, p.Mountpoint, false, customName, d.ctx)
+		if ok {
+			stats.Setting, stats.Expected, stats.Available = filesystem, true, true
+			d.agent.fsStats[key] = stats
+		}
 		return
 	}
 
@@ -428,7 +435,7 @@ func (a *Agent) pruneDuplicateRootExtraFilesystems() {
 		return
 	}
 	for name, stats := range a.fsStats {
-		if stats == nil || stats.Root {
+		if stats == nil || stats.Root || stats.Expected {
 			continue
 		}
 		extraUsage, err := disk.Usage(stats.Mountpoint)
@@ -634,6 +641,13 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 	cacheExtraFs := a.diskUsageCacheDuration > 0 &&
 		!a.lastDiskUsageUpdate.IsZero() &&
 		time.Since(a.lastDiskUsageUpdate) < a.diskUsageCacheDuration
+	if hasExpectedFilesystems(a.fsStats) {
+		if partitions, err := disk.PartitionsWithContext(context.Background(), true); err == nil {
+			refreshExpectedFilesystemAvailability(a.fsStats, partitions)
+		} else {
+			slog.Error("Error refreshing disk partitions", "err", err)
+		}
+	}
 
 	// ZFS dataset mountpoints use `zfs list` values because statfs(2) reports
 	// dataset-level usage that excludes child datasets (#1541).
@@ -644,6 +658,9 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 
 	// disk usage
 	for _, stats := range a.fsStats {
+		if stats.Expected && !stats.Available {
+			continue
+		}
 		// Skip non-root filesystems if caching is active
 		if cacheExtraFs && !stats.Root {
 			continue
@@ -663,10 +680,7 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		} else {
 			// reset stats if error (likely unmounted)
 			slog.Error("Error getting disk stats", "name", stats.Mountpoint, "err", err)
-			stats.DiskTotal = 0
-			stats.DiskUsed = 0
-			stats.TotalRead = 0
-			stats.TotalWrite = 0
+			resetFilesystemStats(stats)
 			continue
 		}
 		stats.DiskTotal = utils.BytesToGigabytes(total)
@@ -681,6 +695,37 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 	// Update the last disk usage update time when we've collected extra filesystems
 	if !cacheExtraFs {
 		a.lastDiskUsageUpdate = time.Now()
+	}
+}
+
+func hasExpectedFilesystems(fsStats map[string]*system.FsStats) bool {
+	for _, stats := range fsStats {
+		if stats != nil && stats.Expected {
+			return true
+		}
+	}
+	return false
+}
+
+func resetFilesystemStats(stats *system.FsStats) {
+	stats.DiskTotal, stats.DiskUsed = 0, 0
+	stats.TotalRead, stats.TotalWrite = 0, 0
+	stats.DiskIoStats = [6]float64{}
+}
+
+// A mount disappearing must not turn into usage data for its parent filesystem.
+func refreshExpectedFilesystemAvailability(fsStats map[string]*system.FsStats, partitions []disk.PartitionStat) {
+	for _, stats := range fsStats {
+		if !stats.Expected {
+			continue
+		}
+		partition, found := findPartitionByFilesystemSetting(stats.Setting, partitions)
+		stats.Available = found
+		if found {
+			stats.Mountpoint = partition.Mountpoint
+		} else {
+			resetFilesystemStats(stats)
+		}
 	}
 }
 

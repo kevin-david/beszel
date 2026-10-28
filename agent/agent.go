@@ -260,6 +260,7 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 
 	data.Stats.ExtraFs = make(map[string]*system.FsStats)
 	data.Info.ExtraFsPct = make(map[string]float64)
+	data.Info.ExtraFsAvailable = make(map[string]bool)
 	for name, stats := range a.fsStats {
 		if stats.Root {
 			if stats.Name != "" {
@@ -267,12 +268,14 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 			}
 			continue
 		}
+		key := name
+		if stats.Name != "" {
+			key = stats.Name
+		}
+		if stats.Expected {
+			data.Info.ExtraFsAvailable[key] = stats.Available
+		}
 		if stats.DiskTotal > 0 {
-			// Use custom name if available, otherwise use device name
-			key := name
-			if stats.Name != "" {
-				key = stats.Name
-			}
 			data.Stats.ExtraFs[key] = stats
 			// Add percentages to Info struct for dashboard
 			if stats.DiskTotal > 0 {
