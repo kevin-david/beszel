@@ -57,6 +57,28 @@ The [quick start guide](https://beszel.dev/guide/getting-started) and other docu
 - **S.M.A.R.T.** - Host system disk health (includes eMMC wear/EOL and Linux mdraid array health via sysfs when available).
 - **ZFS** - Pool capacity, usage, health, I/O throughput, scrub status, and per-dataset usage.
 
+## Kevin's fork
+
+The fork adds reboot alerts and alerts for configured filesystems missing from
+two consecutive samples. Agents must use the current protocol; upgrade old fork
+agents before deploying this hub. To restore an old fork agent, restore the
+compatible hub first. Saved metric history remains readable.
+
+Before deploying an update, run `supplemental/scripts/verify-fork-upgrade.sh`
+as root with the live data path, candidate image, and a new private output
+directory. It tests migrations on SQLite backups with networking disabled.
+The validation copy is not a deployment rollback backup.
+
+`supplemental/scripts/deploy-fork.sh` deploys a validated image and host agent
+with a stopped-data backup. Its `--rollback BACKUP_DIRECTORY` mode restores
+the saved image identity, data, and agent together. Configure alert thresholds
+through the hub's settings.
+
+The hub Dockerfile pins Go to the version in `go.mod`. The upstream Docker
+workflow publishes tagged fork images under `ghcr.io/kevin-david/beszel/`.
+Fork-only alert labels remain in English; upstream labels use the translation
+catalogs.
+
 ## Help and discussion
 
 Please search existing issues and discussions before opening a new one. I try my best to respond, but may not always have time to do so.
