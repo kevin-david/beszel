@@ -1061,10 +1061,6 @@ msgstr "ناموفق: {0}"
 msgid "Fans"
 msgstr "فن‌ها"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "یک یا چند گواهی تا {0, plural, one {# روز} other {# روز}} دیگر منقضی می‌شوند"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "یک یا چند کانتینر در وضعیت ناسالم هستند"
 
@@ -1812,10 +1804,6 @@ msgstr "خواندن"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "خطاهای خواندن"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "سرعت فن‌های سیستم (RPM)"
 msgid "System load averages over time"
 msgstr "میانگین بار سیستم در طول زمان"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "خدمات Systemd"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "هنگامی که میانگین بار ۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "هنگامی فعال می‌شود که بررسی سلامت کانتینر وضعیت ناسالم را گزارش کند"
 
@@ -2381,10 +2361,6 @@ msgstr "زمانی فعال می‌شود که افت یک‌ساعته از آ�
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "هنگامی که وضعیت بین بالا و پایین تغییر می‌کند، فعال می‌شود"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

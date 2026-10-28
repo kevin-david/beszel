@@ -1061,10 +1061,6 @@ msgstr "Неуспешни: {0}"
 msgid "Fans"
 msgstr "Вентилатори"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Един или повече сертификати изтичат до {0, plural, one {# ден} other {# дни}}"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Един или повече контейнери са в неизправно състояние"
 
@@ -1812,10 +1804,6 @@ msgstr "Прочети"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Грешки при четене"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Скорости на вентилаторите на системата
 msgid "System load averages over time"
 msgstr "Средно натоварване на системата във времето"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Услуги на systemd"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Задейства се, когато употребата на паметта за 5 минута надвиши зададен праг"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Задейства се, когато проверката на състоянието на контейнер отчете неизправност"
 
@@ -2381,10 +2361,6 @@ msgstr "Сработва, когато загубата за един час н�
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Задейства се, когато статуса превключва между долу и горе"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

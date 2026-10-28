@@ -71,12 +71,13 @@ The validation copy is not a deployment rollback backup.
 
 `supplemental/scripts/deploy-fork.sh` deploys a validated image and host agent
 with a stopped-data backup. Its `--rollback BACKUP_DIRECTORY` mode restores
-the saved image identity, data, and agent together. For local alert settings,
-build `./internal/cmd/fork-config` and run it with `--offline` and an absolute
-`--data-dir` while the hub is stopped. Restart the hub after saving settings.
+the saved image identity, data, and agent together. Configure alert thresholds
+through the hub's settings.
 
-The hub Dockerfile pins Go to the version in `go.mod`. Fork image publication
-uses `.github/workflows/fork-docker-images.yml`.
+The hub Dockerfile pins Go to the version in `go.mod`. The upstream Docker
+workflow publishes tagged fork images under `ghcr.io/kevin-david/beszel/`.
+Fork-only alert labels remain in English; upstream labels use the translation
+catalogs.
 
 ## Help and discussion
 

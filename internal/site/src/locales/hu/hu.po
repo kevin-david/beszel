@@ -1061,10 +1061,6 @@ msgstr "Sikertelen: {0}"
 msgid "Fans"
 msgstr "Ventilátorok"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Egy vagy több tanúsítvány lejár {0, plural, one {# nap} other {# nap}} belül"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Egy vagy több konténer állapota nem megfelelő"
 
@@ -1812,10 +1804,6 @@ msgstr "Olvasás"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Olvasási hibák"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Rendszerventilátorok sebessége (RPM)"
 msgid "System load averages over time"
 msgstr "Rendszer terhelési átlaga"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd szolgáltatások"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Riaszt, ha az 5 perces terhelési átlag túllép egy küszöbértéket"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Akkor aktiválódik, amikor egy konténer állapotellenőrzése hibás állapotot jelez"
 
@@ -2381,10 +2361,6 @@ msgstr "Akkor aktiválódik, ha az egyórás veszteség meghalad egy küszöbér
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Riaszt, amikor a rendszer online állapota változik"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
