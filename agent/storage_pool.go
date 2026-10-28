@@ -16,8 +16,9 @@ import (
 
 // zfsDatasetUsage holds usage values for a ZFS dataset mountpoint.
 type zfsDatasetUsage struct {
-	used  uint64
-	avail uint64
+	used        uint64
+	avail       uint64
+	unavailable bool
 }
 
 // datasetUsageRefreshInterval controls how often `zfs list` is re-run for the
@@ -85,8 +86,8 @@ func newStoragePoolManager() *StoragePoolManager {
 func newZfsBackend() *poolBackend {
 	return &poolBackend{
 		name:           "zfs",
-		poolStatsFn:    optionalPoolSource(zfs.PoolStats),
-		datasetsFn:     optionalPoolSource(zfs.Datasets),
+		poolStatsFn:    zfs.PoolStats,
+		datasetsFn:     zfs.Datasets,
 		kernelStatsFn:  optionalPoolSource(zfs.PoolKernelStats),
 		poolStatusesFn: optionalPoolSource(zfs.PoolStatuses),
 	}
@@ -281,6 +282,13 @@ func (b *poolBackend) refreshDatasetUsage() map[string]zfsDatasetUsage {
 func (b *poolBackend) storeDatasetUsage(datasets []zfs.Dataset, err error) {
 	if err != nil {
 		slog.Debug("Storage pool dataset usage unavailable", "backend", b.name, "err", err)
+		// Keep mount identity so a failed zfs query cannot fall back to statfs,
+		// but do not publish the previous capacity as a fresh measurement.
+		unavailable := make(map[string]zfsDatasetUsage, len(b.datasetUsage))
+		for mountpoint := range b.datasetUsage {
+			unavailable[mountpoint] = zfsDatasetUsage{unavailable: true}
+		}
+		b.datasetUsage = unavailable
 	} else {
 		usage := make(map[string]zfsDatasetUsage, len(datasets))
 		for _, ds := range datasets {
@@ -294,8 +302,8 @@ func (b *poolBackend) storeDatasetUsage(datasets []zfs.Dataset, err error) {
 }
 
 // DatasetUsage returns ZFS dataset usage keyed by mountpoint, refreshed at
-// most every datasetUsageRefreshInterval. On failure the previous map is
-// retained and a debug log is emitted.
+// most every datasetUsageRefreshInterval. Failed readings retain mount identity
+// with an explicit unavailable state until collection succeeds again.
 func (m *StoragePoolManager) DatasetUsage() map[string]zfsDatasetUsage {
 	for _, backend := range m.backends {
 		if backend.name == "zfs" {
@@ -347,7 +355,13 @@ func (b *poolBackend) getBackendDetail(force bool, interval time.Duration) *zfse
 
 // collectDetail builds a ZfsData payload from the current system state.
 func (b *poolBackend) collectDetail(previous *zfsentity.ZfsData) (*zfsentity.ZfsData, error) {
-	pools, err := b.poolStatsFn()
+	poolStats := b.poolStatsFn
+	if previous == nil || len(previous.Pools) == 0 {
+		// A backend absent on first observation is optional. Once observed,
+		// losing its collector must not authorize deletion of saved pools.
+		poolStats = optionalPoolSource(poolStats)
+	}
+	pools, err := poolStats()
 	if err != nil {
 		return nil, err
 	}

@@ -3,15 +3,65 @@
 package agent
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/henrygd/beszel/agent/zfs"
 	"github.com/henrygd/beszel/internal/entities/system"
+	zfsentity "github.com/henrygd/beszel/internal/entities/zfs"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestFailedDatasetUsageDoesNotPublishStaleOrStatfsCapacity(t *testing.T) {
+	b := &poolBackend{name: "zfs"}
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/", Used: 10, Avail: 30}}, nil)
+	m := &StoragePoolManager{backends: []*poolBackend{b}}
+	a := &Agent{fsStats: map[string]*system.FsStats{"root": {Root: true, Mountpoint: "/"}}, storagePoolManager: m}
+	var stats system.Stats
+	a.updateDiskUsage(&stats)
+	assert.Equal(t, 25.0, stats.DiskPct)
+
+	previous := b.datasetUsage
+	b.storeDatasetUsage(nil, errors.New("zfs collector failed"))
+	a.updateDiskUsage(&stats)
+	assert.True(t, b.datasetUsage["/"].unavailable)
+	assert.Equal(t, uint64(10), previous["/"].used, "published cache references must not be mutated")
+	assert.Zero(t, stats.DiskTotal)
+	assert.Zero(t, stats.DiskUsed)
+	assert.Zero(t, stats.DiskPct)
+
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/", Used: 20, Avail: 20}}, nil)
+	a.updateDiskUsage(&stats)
+	assert.Equal(t, 50.0, stats.DiskPct)
+}
+
+func TestObservedZfsMountSurvivesMissingUtility(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	b := newZfsBackend()
+	b.storeDatasetUsage([]zfs.Dataset{{Mountpoint: "/tank", Used: 10, Avail: 30}}, nil)
+	datasets, err := b.datasets()
+	require.Error(t, err, "the real backend must preserve missing utility or interface errors")
+	b.storeDatasetUsage(datasets, err)
+	require.Contains(t, b.datasetUsage, "/tank")
+	assert.True(t, b.datasetUsage["/tank"].unavailable)
+}
+
+func TestObservedZfsInventoryCannotDisappearWhenUtilityIsMissing(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	b := newZfsBackend()
+	previous := &zfsentity.ZfsData{Complete: true, Pools: []*zfsentity.PoolDetail{{Name: "tank"}}}
+	detail, err := b.collectDetail(previous)
+	require.Error(t, err)
+	assert.Nil(t, detail, "a collector failure cannot authorize deleting known pools")
+
+	detail, err = b.collectDetail(nil)
+	require.NoError(t, err, "startup without ZFS remains supported")
+	assert.True(t, detail.Complete)
+	assert.Empty(t, detail.Pools)
+}
 
 // TestUpdateDiskUsageZfsMountpoint verifies that a filesystem whose mountpoint
 // is a ZFS dataset reports `zfs list` usage (which includes child datasets)

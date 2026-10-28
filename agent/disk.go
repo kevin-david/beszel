@@ -668,6 +668,13 @@ func (a *Agent) updateDiskUsage(systemStats *system.Stats) {
 		var total, used uint64
 		var usedPct float64
 		if u, ok := zfsUsage[stats.Mountpoint]; ok {
+			if u.unavailable {
+				resetFilesystemStats(stats)
+				if stats.Root {
+					systemStats.DiskTotal, systemStats.DiskUsed, systemStats.DiskPct = 0, 0, 0
+				}
+				continue
+			}
 			total = u.used + u.avail
 			used = u.used
 			if total > 0 {
