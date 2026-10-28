@@ -1061,10 +1061,6 @@ msgstr "Fehlgeschlagen: {0}"
 msgid "Fans"
 msgstr "Lüfter"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Ein oder mehrere Zertifikate laufen innerhalb von {0, plural, one {# Tag} other {# Tage}} ab"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Ein oder mehrere Container sind fehlerhaft"
 
@@ -1812,10 +1804,6 @@ msgstr "Lesen"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Lesefehler"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Systemlüftergeschwindigkeiten (RPM)"
 msgid "System load averages over time"
 msgstr "Systemlastdurchschnitt im Zeitverlauf"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd-Dienste"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Löst aus, wenn der Lastdurchschnitt der letzten 5 Minuten einen Schwellenwert überschreitet"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Wird ausgelöst, wenn die Integritätsprüfung eines Containers einen fehlerhaften Zustand meldet"
 
@@ -2381,10 +2361,6 @@ msgstr "Wird ausgelöst, wenn der Stunden-Verlust einen Schwellenwert überschre
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Löst aus, wenn der Status zwischen online und offline wechselt"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

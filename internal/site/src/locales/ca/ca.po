@@ -1061,10 +1061,6 @@ msgstr "Fallits: {0}"
 msgid "Fans"
 msgstr "Ventiladors"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Un o més certificats caduquen en {0, plural, one {# dia} other {# dies}}"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Un o més contenidors no estan saludables"
 
@@ -1812,10 +1804,6 @@ msgstr "Lectura"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Errors de lectura"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Velocitat dels ventiladors del sistema (RPM)"
 msgid "System load averages over time"
 msgstr "Càrregues mitjanes del sistema al llarg del temps"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Serveis systemd"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "S'activa quan la càrrega mitjana de 5 minuts supera un llindar"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "S'activa quan la comprovació de salut d'un contenidor indica que no està saludable"
 
@@ -2381,10 +2361,6 @@ msgstr "S'activa quan la pèrdua en una hora supera un llindar"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "S'activa quan l'estat canvia entre actiu i inactiu"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

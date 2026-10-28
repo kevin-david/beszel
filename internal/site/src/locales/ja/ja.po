@@ -1061,10 +1061,6 @@ msgstr "失敗: {0}"
 msgid "Fans"
 msgstr "ファン"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "1つ以上の証明書が{0, plural, other {# 日}}以内に期限切れになります"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "いずれかのコンテナが異常な状態です"
 
@@ -1812,10 +1804,6 @@ msgstr "読み取り"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "読み取りエラー"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "システムファン速度 (RPM)"
 msgid "System load averages over time"
 msgstr "システムの負荷平均の推移"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemdサービス"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "5分間の負荷平均がしきい値を超えたときにトリガーされます"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "コンテナのヘルスチェックで異常な状態が報告されたときにトリガーされます"
 
@@ -2381,10 +2361,6 @@ msgstr "1時間のパケットロス率がしきい値を超えるとトリガ�
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "システムが開始または停止したときトリガーされます"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

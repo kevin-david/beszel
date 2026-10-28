@@ -1061,10 +1061,6 @@ msgstr "실패: {0}"
 msgid "Fans"
 msgstr "팬"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "하나 이상의 인증서가 {0, plural, other {# 일}} 이내에 만료됩니다"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "하나 이상의 컨테이너가 비정상 상태입니다"
 
@@ -1812,10 +1804,6 @@ msgstr "읽기"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "읽기 오류"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "시스템 팬 속도 (RPM)"
 msgid "System load averages over time"
 msgstr "시간에 따른 시스템 부하 평균"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd 서비스"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "5분 부하 평균이 임계값을 초과하면 트리거됩니다."
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "컨테이너 상태 검사가 비정상 상태를 보고하면 트리거됩니다"
 
@@ -2381,10 +2361,6 @@ msgstr "1시간 패킷 손실률이 임계값을 초과하면 트리거됩니다
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "시스템의 전원이 켜지거나 꺼질때 트리거됩니다."
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

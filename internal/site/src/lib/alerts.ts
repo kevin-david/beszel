@@ -10,20 +10,20 @@ import { ThermometerIcon, BatteryMediumIcon, HourglassIcon } from "@/components/
 /** Alert info for each alert type */
 export const alertInfo: Record<string, AlertInfo> = {
   Reboot: {
-    name: () => t`Reboot`,
+    name: () => "Reboot",
     unit: "",
     icon: RotateCcwIcon,
-    desc: () => t`Triggers when the system restarts`,
-    triggeredDesc: () => t`System restarted`,
+    desc: () => "Triggers when the system restarts",
+    triggeredDesc: () => "System restarted",
     noDuration: true,
     noThreshold: true,
   },
   Filesystem: {
-    name: () => t`Filesystem Availability`,
+    name: () => "Filesystem Availability",
     unit: "",
     icon: HardDriveIcon,
-    desc: () => t`Triggers when a configured filesystem is unavailable for two consecutive checks`,
-    triggeredDesc: () => t`One or more configured filesystems are unavailable`,
+    desc: () => "Triggers when a configured filesystem is unavailable for two consecutive checks",
+    triggeredDesc: () => "One or more configured filesystems are unavailable",
     noDuration: true,
     noThreshold: true,
   },

@@ -1061,10 +1061,6 @@ msgstr "Muvaffaqiyatsiz: {0}"
 msgid "Fans"
 msgstr "Ventilyatorlar"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Bir yoki bir nechta sertifikatning muddati {0, plural, one {# kun} other {# kun}} ichida tugaydi"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Bir yoki bir nechta konteyner nosog‘lom holatda"
 
@@ -1812,10 +1804,6 @@ msgstr "O'qish"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "O‘qish xatolari"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Tizim ventilyatorlari tezligi (RPM)"
 msgid "System load averages over time"
 msgstr "Tizim yuklanishi o'rtachalari vaqt bo'yicha"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd xizmatlari"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "5 daqiqalik o'rtacha yuklanish chegaradan oshganda ishga tushadi"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Konteyner sog‘liq tekshiruvi nosog‘lom holat haqida xabar berganda ishga tushadi"
 
@@ -2381,10 +2361,6 @@ msgstr "Bir soatlik yo‘qotish chegaradan oshganda ishga tushadi"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Holat ishlayapti/ishlamayapti o'rtasida o'zgarganda ishga tushadi"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"

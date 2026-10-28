@@ -1061,10 +1061,6 @@ msgstr "Neuspjelo: {0}"
 msgid "Fans"
 msgstr "Ventilatori"
 
-#: src/lib/alerts.ts
-msgid "Filesystem Availability"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -1542,10 +1538,6 @@ msgid "One or more certificates expire within {0, plural, one {# day} other {# d
 msgstr "Jedan ili više certifikata istječe unutar {0, plural, one {# dan} few {# dana} other {# dana}}"
 
 #: src/lib/alerts.ts
-msgid "One or more configured filesystems are unavailable"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "One or more containers are unhealthy"
 msgstr "Jedan ili više spremnika nije ispravno"
 
@@ -1812,10 +1804,6 @@ msgstr "Pročitaj"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Read errors"
 msgstr "Pogreške čitanja"
-
-#: src/lib/alerts.ts
-msgid "Reboot"
-msgstr ""
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
@@ -2147,10 +2135,6 @@ msgstr "Brzine ventilatora sustava (RPM)"
 msgid "System load averages over time"
 msgstr "Prosječno opterećenje sustava kroz vrijeme"
 
-#: src/lib/alerts.ts
-msgid "System restarted"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Systemd servisi"
@@ -2327,10 +2311,6 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Pokreće se kada prosječna opterećenost sustava unutar 5 minuta prijeđe prag"
 
 #: src/lib/alerts.ts
-msgid "Triggers when a configured filesystem is unavailable for two consecutive checks"
-msgstr ""
-
-#: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Aktivira se kada provjera stanja spremnika prijavi neispravno stanje"
 
@@ -2381,10 +2361,6 @@ msgstr "Pokreće se kada jednosatni gubitak prijeđe prag"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Pokreće se kada se status sustava promijeni"
-
-#: src/lib/alerts.ts
-msgid "Triggers when the system restarts"
-msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
