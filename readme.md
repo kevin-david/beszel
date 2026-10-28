@@ -60,9 +60,9 @@ The [quick start guide](https://beszel.dev/guide/getting-started) and other docu
 ## Kevin's fork
 
 The fork adds reboot alerts and alerts for configured filesystems missing from
-two consecutive samples. It accepts the older fork agents' CBOR field numbers
-alongside upstream agents. Update the hub before the agent; rollback requires
-restoring the old hub data and agent binary together.
+two consecutive samples. Agents must use the current protocol; upgrade old fork
+agents before deploying this hub. To restore an old fork agent, restore the
+compatible hub first. Saved metric history remains readable.
 
 Before deploying an update, run `supplemental/scripts/verify-fork-upgrade.sh`
 as root with the live data path, candidate image, and a new private output
